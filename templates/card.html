@@ -1,0 +1,46 @@
+<!-- Task Titles and Descriptions -->
+<div id="card-container">
+  <div>
+    <h2>{{ (index .Tasks 0).Title }}</h2>
+    <p>{{ (index .Tasks 0).Description }}</p>
+  </div>
+
+  <div>
+    <h2>{{ (index .Tasks 1).Title }}</h2>
+    <p>{{ (index .Tasks 1).Description }}</p>
+  </div>
+
+  <!-- Information and Attributes -->
+  <div>
+    <span>{{ .Info }}</span>
+    <span>{{ .Level }}</span>
+    <span>
+      Achievements:
+      {{ range .Achievements }}
+      <span>{{ . }}</span>
+      {{ end }}
+    </span>
+  </div>
+
+  <!-- Dungeons and Spells -->
+  <div>
+    <h3>Dungeons:</h3>
+    <div>
+      {{ range .Dungeon1 }}
+      <p>{{ . }}</p>
+      {{ end }}
+      {{ range .Dungeon2 }}
+      <p>{{ . }}</p>
+      {{ end }}
+      {{ range .Dungeon3 }}
+      <p>{{ . }}</p>
+      {{ end }}
+    </div>
+    <h3>Spell:</h3>
+    <p>{{ .Spell }}</p>
+  </div>
+
+</div>
+
+<div hx-get="/card?id={{ inc .Step }}" hx-trigger="revealed" hx-swap="outerHTML">Loading...
+</div>
