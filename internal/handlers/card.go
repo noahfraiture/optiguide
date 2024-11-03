@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"optimax/internal/auth"
 	"optimax/internal/parser"
 	"strconv"
 
@@ -12,23 +13,49 @@ import (
 func RenderCard(w http.ResponseWriter, r *http.Request) {
 	idParam := r.URL.Query().Get("id")
 	if idParam == "" {
-		http.Error(w, "No card ID", http.StatusBadRequest)
+		msg := fmt.Sprintf("No card ID: %s", idParam)
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+		msg := fmt.Sprintf("Invalid card ID: %s", idParam)
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
 	}
 	card, err := parser.GetCard(id)
 	if err != nil {
-		http.Error(w, "Error in parsing", http.StatusInternalServerError)
+		msg := fmt.Sprintf("Card not found: %d", id)
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
+
+	user, err := auth.GetUser(r)
+	if err != nil {
+		msg := fmt.Sprintf("User not found: %s", idParam)
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	progress := auth.Progress[user.UserID]
+	check, ok := progress.Steps[card.Step]
+	card.Checked = check && ok
+
 	tmpl, err := template.
 		New("card.html").
 		Funcs(template.FuncMap{
 			"inc": func(i int) int {
 				return i + 1
+			},
+			"minus": func(i, j int) int {
+				return i - j
+			},
+			"greater": func(i, j int) bool {
+				return i > j
 			},
 		}).
 		ParseFiles("templates/card.html")

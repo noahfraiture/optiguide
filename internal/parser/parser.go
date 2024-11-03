@@ -22,6 +22,7 @@ type Card struct {
 	Dungeon2     []string
 	Dungeon3     []string
 	Spell        string
+	Checked      bool
 }
 
 // Level, first column

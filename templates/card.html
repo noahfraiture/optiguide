@@ -1,5 +1,6 @@
 <!-- Task Titles and Descriptions -->
-<div id="card-container">
+<div id="card-container-{{ .Step }}">
+  <h1>{{ .Step }}</h1>
   <div>
     <h2>{{ (index .Tasks 0).Title }}</h2>
     <p>{{ (index .Tasks 0).Description }}</p>
@@ -40,7 +41,14 @@
     <p>{{ .Spell }}</p>
   </div>
 
+  <input type="checkbox" hx-get="/toggle?step={{ .Step }}" hx-trigger="change" hx-swap="none" {{ if .Checked }} checked
+    {{ end }} />
 </div>
 
-<div hx-get="/card?id={{ inc .Step }}" hx-trigger="revealed" hx-swap="outerHTML">Loading...
+<div hx-get="/card?id={{ inc .Step }}"
+  hx-trigger=
+  {{ if false }}"revealed from:#card-container-{{ minus .Step 2 }}"
+  {{ else }}"revealed"
+  {{ end }}
+  hx-swap="outerHTML">Loading...
 </div>

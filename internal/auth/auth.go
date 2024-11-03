@@ -29,6 +29,8 @@ func Init() {
 		log.Fatal("Environment variables (GOOGLE_ID, GOOGLE_SECRET, GOOGLE_CALLBACK_URL, SESSION_SECRET) are required")
 	}
 
+	store = sessions.NewCookieStore([]byte(sessionSecret))
+
 	// Set up Google provider for Goth
 	goth.UseProviders(google.New(clientID, clientSecret, clientCallbackURL))
 
