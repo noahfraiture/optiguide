@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"optimax/internal/auth"
 
@@ -27,6 +28,7 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	err = auth.SaveUser(user, w, r)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Error during saving user", http.StatusInternalServerError)
 		return
 	}

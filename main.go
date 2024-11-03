@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+
 	auth.Init()
 
 	http.HandleFunc("/", serveIndex)

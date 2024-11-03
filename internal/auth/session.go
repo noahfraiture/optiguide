@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -28,7 +29,7 @@ func GetUser(r *http.Request) (goth.User, error) {
 
 func SaveUser(user goth.User, w http.ResponseWriter, r *http.Request) error {
 	session, err := store.Get(r, "user-session")
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "securecookie: the value is not valid") {
 		return err
 	}
 	session.Values["user"] = user
