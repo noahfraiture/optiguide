@@ -3,14 +3,16 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport">
-  <title>Card Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ block "title" . }}{{ end }}</title>
   <script src="https://unpkg.com/htmx.org"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 
-<div id="card-container">
-  <div hx-get="/card?id=0" hx-target="#card-container" hx-trigger="load"></div>
-</div>
+<body>
+  {{ template "topbar.html" . }}
+
+  {{ block "body" . }}{{ end }}
+</body>
 
 </html>
