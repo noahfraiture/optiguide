@@ -16,7 +16,7 @@ func Init() {
 	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal(".env file failed to load!")
+		fmt.Println(".env file not found")
 	}
 
 	clientID := os.Getenv("GOOGLE_ID")
