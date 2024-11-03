@@ -1,54 +1,50 @@
 <!-- Task Titles and Descriptions -->
-<div id="card-container-{{ .Step }}">
-  <h1>{{ .Step }}</h1>
-  <div>
-    <h2>{{ (index .Tasks 0).Title }}</h2>
-    <p>{{ (index .Tasks 0).Description }}</p>
+<div id="card-container-{{ .Step }}" class="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4 my-4">
+  <h1 class="text-xl font-medium text-green-500">{{ .Step }}</h1>
+  <div class="border-b border-gray-200 pb-4">
+    <h2 class="text-lg font-medium">{{ (index .Tasks 0).Title }}</h2>
+    <p class="text-gray-500">{{ (index .Tasks 0).Description }}</p>
   </div>
 
-  <div>
-    <h2>{{ (index .Tasks 1).Title }}</h2>
-    <p>{{ (index .Tasks 1).Description }}</p>
+  <div class="border-b border-gray-200 pb-4">
+    <h2 class="text-lg font-medium">{{ (index .Tasks 1).Title }}</h2>
+    <p class="text-gray-500">{{ (index .Tasks 1).Description }}</p>
   </div>
 
   <!-- Information and Attributes -->
-  <div>
-    <span>{{ .Info }}</span>
-    <span>{{ .Level }}</span>
-    <span>
+  <div class="text-sm text-gray-600">
+    <span class="inline-block text-green-800">{{ .Info }}</span>
+    <span class="ml-2">{{ .Level }}</span>
+    <span class="ml-2">
       Achievements:
       {{ range .Achievements }}
-      <span>{{ . }}</span>
+      <span class="inline-block text-green-800">{{ . }}</span>
       {{ end }}
     </span>
   </div>
 
   <!-- Dungeons and Spells -->
-  <div>
-    <h3>Dungeons:</h3>
-    <div>
+  <div class="mt-4">
+    <h3 class="font-medium">Dungeons:</h3>
+    <div class="ml-2">
       {{ range .Dungeon1 }}
-      <p>{{ . }}</p>
+      <p class="text-gray-500">{{ . }}</p>
       {{ end }}
       {{ range .Dungeon2 }}
-      <p>{{ . }}</p>
+      <p class="text-gray-500">{{ . }}</p>
       {{ end }}
       {{ range .Dungeon3 }}
-      <p>{{ . }}</p>
+      <p class="text-gray-500">{{ . }}</p>
       {{ end }}
     </div>
-    <h3>Spell:</h3>
-    <p>{{ .Spell }}</p>
+    <h3 class="font-medium mt-4">Spell:</h3>
+    <p class="text-gray-500">{{ .Spell }}</p>
   </div>
 
   <input type="checkbox" hx-get="/toggle?step={{ .Step }}" hx-trigger="change" hx-swap="none" {{ if .Checked }} checked
     {{ end }} />
 </div>
 
-<div hx-get="/card?id={{ inc .Step }}"
-  hx-trigger=
-  {{ if false }}"revealed from:#card-container-{{ minus .Step 2 }}"
-  {{ else }}"revealed"
-  {{ end }}
-  hx-swap="outerHTML">Loading...
+<div hx-get="/card?id={{ inc .Step }}" hx-trigger={{ if false }}"revealed from:#card-container-{{ minus .Step 2 }}" {{
+  else }}"revealed" {{ end }} hx-swap="outerHTML" class="mt-4 text-center text-gray-500">Loading...
 </div>
