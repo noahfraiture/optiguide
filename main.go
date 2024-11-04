@@ -6,12 +6,17 @@ import (
 	"text/template"
 
 	"optimax/internal/auth"
+	"optimax/internal/db"
 	"optimax/internal/handlers"
 )
 
 func main() {
 
 	auth.Init()
+	err := db.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	http.HandleFunc("/", serveIndex)
 	http.HandleFunc("/card", handlers.RenderCard)
