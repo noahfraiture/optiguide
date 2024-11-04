@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
+	"optimax/internal/db"
 	"strings"
 
 	"github.com/gorilla/sessions"
@@ -33,7 +34,11 @@ func SaveUser(user goth.User, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	session.Values["user"] = user
-	return session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		return err
+	}
+	return db.InsertUser(db.User{ID: user.UserID, Email: user.Email})
 }
 
 func ClearSession(w http.ResponseWriter, r *http.Request) error {
