@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/gorilla/sessions"
-	"github.com/joho/godotenv"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
@@ -14,11 +13,6 @@ import (
 
 func Init() {
 	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println(".env file not found")
-	}
-
 	clientID := os.Getenv("GOOGLE_ID")
 	clientSecret := os.Getenv("GOOGLE_SECRET")
 	clientCallbackURL := os.Getenv("GOOGLE_CALLBACK_URL")

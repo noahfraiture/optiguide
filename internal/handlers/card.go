@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"optimax/internal/auth"
+	"optimax/internal/db"
 	"optimax/internal/parser"
 	"strconv"
 
@@ -41,9 +42,15 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	progress := auth.Progress[user.UserID]
-	check, ok := progress.Steps[card.Step]
-	card.Checked = check && ok
+	u := db.User{ID: user.UserID}
+	done, err := u.IsStepDone(card.Step)
+	if err != nil {
+		msg := "Step done error"
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	card.Checked = done
 
 	tmpl, err := template.
 		New("card.html").
