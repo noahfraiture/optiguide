@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"optimax/internal/auth"
+	"optimax/internal/db"
 	"strconv"
 )
 
@@ -31,16 +32,7 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userProgress auth.UserProgress
-	var ok bool
-	if userProgress, ok = auth.Progress[userAuth.UserID]; !ok {
-		userProgress = auth.UserProgress{
-			UserID: userAuth.UserID,
-			Steps:  make(map[int]bool),
-		}
-	}
-	progress, ok := userProgress.Steps[stepID]
-	userProgress.Steps[stepID] = !ok || !progress
-	auth.Progress[userProgress.UserID] = userProgress
+	u := db.User{ID: userAuth.UserID}
+	u.ToggleProgress(stepID)
 	w.WriteHeader(http.StatusNoContent)
 }

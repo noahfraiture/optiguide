@@ -1,6 +1,6 @@
 services:
   website:
-    container_name: optiguide
+    container_name: optiguide_website
     image: noahfraiture/optiguide
     environment:
       - GOOGLE_ID=${GOOGLE_ID}
@@ -20,8 +20,8 @@ services:
         condition: service_healthy
 
   postgres:
-    container_name: postgres_db
-    image: 17-alpine3.20
+    container_name: optiguide_postgres
+    image: postgres:17-alpine3.20
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

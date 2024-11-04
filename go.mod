@@ -5,7 +5,6 @@ go 1.23.2
 require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/jackc/pgx/v5 v5.7.1
-	github.com/joho/godotenv v1.5.1
 	github.com/markbates/goth v1.80.0
 	github.com/tealeg/xlsx v1.0.5
 )
