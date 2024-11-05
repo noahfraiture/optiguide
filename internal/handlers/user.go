@@ -17,22 +17,22 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	step := r.URL.Query().Get("step")
-	if step == "" {
-		msg := fmt.Sprintf("No step ID: %s", step)
+	card := r.URL.Query().Get("id")
+	if card == "" {
+		msg := fmt.Sprintf("No step ID: %s", card)
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	stepID, err := strconv.Atoi(step)
+	cardID, err := strconv.Atoi(card)
 	if err != nil {
-		msg := fmt.Sprintf("Invalid step ID: %s", step)
+		msg := fmt.Sprintf("Invalid step ID: %s", card)
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 
 	u := db.User{ID: userAuth.UserID}
-	u.ToggleProgress(stepID)
+	u.ToggleProgress(cardID)
 	w.WriteHeader(http.StatusNoContent)
 }

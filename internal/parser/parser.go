@@ -7,22 +7,19 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-type Task struct {
-	Title       string
-	Description string
-}
-
+// TODO : change to array of string instead of simple string
+// Currently this is string because of database library hard to understand
 type Card struct {
-	Step         int
+	ID           int
 	Level        int
 	Info         string
-	Tasks        [2]Task
-	Achievements []string
-	Dungeon1     []string
-	Dungeon2     []string
-	Dungeon3     []string
+	TaskOne      string
+	TaskTwo      string
+	Achievements string
+	DungeonOne   string
+	DungeonTwo   string
+	DungeonThree string
 	Spell        string
-	Checked      bool
 }
 
 // Level, first column
@@ -56,30 +53,15 @@ func parseInfo(row *xlsx.Row, prevInfo *string, prevInfoCounter *int) (string, e
 	return info, err
 }
 
-var globalCards []Card
-
-func GetCard(i int) (Card, error) {
-	if len(globalCards) == 0 {
-		err := parse("guide.xlsx")
-		if err != nil {
-			return Card{}, err
-		}
-	}
-	if i >= len(globalCards) {
-		return Card{}, fmt.Errorf("Index out of range")
-	}
-	return globalCards[i], nil
-}
-
-func parse(fileName string) error {
+func Parse(fileName string) ([]Card, error) {
 	var err error
 	wb, err := xlsx.OpenFile(fileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	progression, ok := wb.Sheet["Progression Optimisée"]
 	if !ok {
-		return fmt.Errorf("Sheet not found")
+		return nil, fmt.Errorf("Sheet not found")
 	}
 
 	cards := make([]Card, 0)
@@ -102,65 +84,28 @@ func parse(fileName string) error {
 
 		level, err := parseLevel(row, &prevLevel)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// Info supplementaire
 		info, err := parseInfo(row, &prevInfo, &prevInfoCounter)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		// Schema Tasks
-		var task1 Task
-		if left != "" {
-			taskOneText := strings.SplitN(row.Cells[6].Value, "\n", 2)
-			if len(taskOneText) != 2 {
-				taskOneText = append(taskOneText, "")
-			}
-			task1 = Task{
-				Title:       taskOneText[0],
-				Description: taskOneText[1],
-			}
-		}
-		var task2 Task
-		if right != "" {
-			taskTwoText := strings.SplitN(row.Cells[8].Value, "\n", 2)
-			if len(taskTwoText) != 2 {
-				taskTwoText = append(taskTwoText, "")
-			}
-			task2 = Task{
-				Title:       taskTwoText[0],
-				Description: taskTwoText[1],
-			}
-		}
-		tasks := [2]Task{task1, task2}
-
-		// Succes concerne
-		achievements := strings.Split((row.Cells[10].Value), "\n")
-
-		// Tour du monde
-		dungeon1 := strings.Split((row.Cells[12].Value), "\n")
-		// Tornade de donjons
-		dungeon2 := strings.Split((row.Cells[14].Value), "\n")
-		// Autre donjons
-		dungeon3 := strings.Split((row.Cells[16].Value), "\n")
-		// Sorts communs
-		spells := row.Cells[18].Value
 
 		cards = append(cards, Card{
-			Step:         step_number,
+			ID:           step_number,
 			Level:        level,
 			Info:         info,
-			Tasks:        tasks,
-			Achievements: achievements,
-			Dungeon1:     dungeon1,
-			Dungeon2:     dungeon2,
-			Dungeon3:     dungeon3,
-			Spell:        spells,
+			TaskOne:      row.Cells[6].Value,
+			TaskTwo:      row.Cells[8].Value,
+			Achievements: row.Cells[10].Value,
+			DungeonOne:   row.Cells[12].Value,
+			DungeonTwo:   row.Cells[14].Value,
+			DungeonThree: row.Cells[16].Value,
+			Spell:        row.Cells[18].Value,
 		})
 		step_number++
 	}
-	globalCards = cards
-	return nil
+	return cards, nil
 }

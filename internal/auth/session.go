@@ -10,6 +10,7 @@ import (
 	"github.com/markbates/goth"
 )
 
+// TODO : move to db
 var store *sessions.CookieStore
 
 func GetUser(r *http.Request) (goth.User, error) {
@@ -17,11 +18,11 @@ func GetUser(r *http.Request) (goth.User, error) {
 	if err != nil {
 		return goth.User{}, err
 	}
-	userAny, ok := session.Values["user"]
+	userData, ok := session.Values["user"]
 	if !ok {
 		return goth.User{}, fmt.Errorf("User not found in session")
 	}
-	user, ok := userAny.(goth.User)
+	user, ok := userData.(goth.User)
 	if !ok {
 		return user, fmt.Errorf("User is not a goth.User")
 	}
