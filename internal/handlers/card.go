@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"optimax/internal/auth"
 	"optimax/internal/db"
-	"optimax/internal/parser"
 	"strconv"
 
 	"html/template"
 )
 
+// TODO
 func RenderCard(w http.ResponseWriter, r *http.Request) {
 	idParam := r.URL.Query().Get("id")
 	if idParam == "" {
@@ -26,7 +26,7 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	card, err := parser.GetCard(id)
+	card, err := db.GetCard(id)
 	if err != nil {
 		msg := fmt.Sprintf("Card not found: %d", id)
 		fmt.Println(msg)
@@ -34,7 +34,7 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := auth.GetUser(r)
+	userSesssion, err := auth.GetUser(r)
 	if err != nil {
 		msg := fmt.Sprintf("User not found: %s", idParam)
 		fmt.Println(msg)
@@ -42,15 +42,14 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u := db.User{ID: user.UserID}
-	done, err := u.IsStepDone(card.Step)
+	user := db.User{ID: userSesssion.UserID}
+	done, err := user.IsStepDone(card.ID)
 	if err != nil {
-		msg := "Step done error"
+		msg := "Card done error"
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	card.Checked = done
 
 	tmpl, err := template.
 		New("card.html").
@@ -72,7 +71,7 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.Execute(w, card)
+	err = tmpl.Execute(w, map[string]any{"Card": card, "Checked": done})
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
