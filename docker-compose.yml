@@ -1,7 +1,6 @@
 services:
-  website:
-    container_name: optiguide_website
-    image: noahfraiture/optiguide
+  optiguide:
+    build: .
     environment:
       - GOOGLE_ID=${GOOGLE_ID}
       - GOOGLE_SECRET=${GOOGLE_SECRET}
@@ -20,7 +19,6 @@ services:
         condition: service_healthy
 
   postgres:
-    container_name: optiguide_postgres
     image: postgres:17-alpine3.20
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
