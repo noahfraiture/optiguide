@@ -3,12 +3,64 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"optimax/internal/auth"
-	"optimax/internal/db"
+	"optiguide/internal/auth"
+	"optiguide/internal/db"
 	"strconv"
 
 	"html/template"
 )
+
+func Plus(w http.ResponseWriter, r *http.Request) {
+	userSesssion, err := auth.GetUser(r)
+	if err != nil {
+		msg := "User not found"
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	user, err := db.QueryUser(userSesssion.UserID)
+	if err != nil {
+		http.Error(w, "error for user", http.StatusBadRequest)
+		return
+	}
+	// TODO: error message or block case
+	if user.TeamSize == 32 {
+		renderCard(w, 0, user)
+		return
+	}
+	err = user.PlusTeamSize(1)
+	if err != nil {
+		http.Error(w, "user plus", http.StatusBadRequest)
+		return
+	}
+	user.TeamSize += 1
+	renderCard(w, 0, user)
+}
+func Minus(w http.ResponseWriter, r *http.Request) {
+	userSesssion, err := auth.GetUser(r)
+	if err != nil {
+		msg := "User not found"
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	user, err := db.QueryUser(userSesssion.UserID)
+	if err != nil {
+		http.Error(w, "error for user", http.StatusBadRequest)
+		return
+	}
+	if user.TeamSize == 1 {
+		renderCard(w, 0, user)
+		return
+	}
+	err = user.PlusTeamSize(-1)
+	if err != nil {
+		http.Error(w, "user minus", http.StatusBadRequest)
+		return
+	}
+	user.TeamSize -= 1
+	renderCard(w, 0, user)
+}
 
 func RenderCard(w http.ResponseWriter, r *http.Request) {
 	pageParam := r.URL.Query().Get("page")
@@ -27,13 +79,22 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 	}
 	userSesssion, err := auth.GetUser(r)
 	if err != nil {
-		msg := fmt.Sprintf("User not found: %s", pageParam)
+		msg := "User not found"
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
+	user, err := db.QueryUser(userSesssion.UserID)
+	if err != nil {
+		msg := fmt.Sprintf("Card not found: %d", page)
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	renderCard(w, page, user)
+}
 
-	user := db.User{ID: userSesssion.UserID}
+func renderCard(w http.ResponseWriter, page int, user db.User) {
 	cardsDone, err := user.GetPage(page)
 	if err != nil {
 		msg := fmt.Sprintf("Card not found: %d", page)
@@ -54,6 +115,16 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 			"greater": func(i, j int) bool {
 				return i > j
 			},
+			"iterate": func(max int) []int {
+				r := make([]int, max)
+				for i := range max {
+					r[i] = i
+				}
+				return r
+			},
+			"and": func(value, i int) bool {
+				return value&(1<<i) != 0
+			},
 		}).
 		ParseFiles("templates/card.html")
 	if err != nil {
@@ -62,10 +133,11 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Cards": cardsDone, "Page": page})
+	err = tmpl.Execute(w, map[string]any{"Cards": cardsDone, "Page": page, "Size": user.TeamSize})
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
 		return
 	}
+
 }

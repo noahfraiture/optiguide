@@ -25,8 +25,17 @@
     <p>{{ .Card.Spell }}</p>
   </div>
 
-  <input type="checkbox" hx-get="/toggle?id={{ .Card.ID }}" hx-trigger="change" hx-swap="none" {{ if .Checked }} checked
-    {{ end }} />
+  {{ $done := .Done }}
+  {{ $card := .Card }}
+  {{ range $i := iterate $.Size }}
+  <input
+    type="checkbox"
+    hx-swap="none"
+    hx-trigger="change"
+    hx-get="/toggle?card={{ $card.ID }}&box={{ $i }}"
+    {{ if and $done $i }} checked {{ end }} />
+  {{ end }}
+
 </div>
 {{ end }}
 <div hx-get="/card?page={{ inc .Page }}" hx-trigger="revealed" hx-swap="outerHTML">Loading...

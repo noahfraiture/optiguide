@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"text/template"
 
-	"optimax/internal/auth"
-	"optimax/internal/db"
-	"optimax/internal/handlers"
+	"optiguide/internal/auth"
+	"optiguide/internal/db"
+	"optiguide/internal/handlers"
 )
 
 func main() {
@@ -20,6 +20,8 @@ func main() {
 
 	http.HandleFunc("/", serveIndex)
 	http.HandleFunc("/card", handlers.RenderCard)
+	http.HandleFunc("/minus", handlers.Minus)
+	http.HandleFunc("/plus", handlers.Plus)
 	http.HandleFunc("/toggle", handlers.Toggle)
 	http.HandleFunc("/auth/google/", handlers.GoogleLogin)
 	http.HandleFunc("/auth/google/callback", handlers.GoogleCallback)

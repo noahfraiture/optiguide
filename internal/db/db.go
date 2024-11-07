@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
-	"optimax/internal/parser"
+	"optiguide/internal/parser"
 	"os"
 
 	"github.com/jackc/pgx/v5"
@@ -65,14 +65,17 @@ func Close() {
 }
 
 type User struct {
-	ID    string
-	Email string
+	ID       string
+	Email    string
+	TeamSize int
 }
 
+// We define a user as an id (from auth provider), his email and the number of case to display
 func tableUser() error {
 	_, err := dbpool.Exec(context.Background(),
 		`CREATE TABLE IF NOT EXISTS users(
 			id TEXT PRIMARY KEY,
+			team_size INTEGER NOT NULL,
 			email TEXT
 		);`,
 	)
@@ -80,7 +83,7 @@ func tableUser() error {
 }
 
 func InsertUser(user User) error {
-	query := `INSERT INTO users (id, email) VALUES (@id, @email) ON CONFLICT (id) DO NOTHING;`
+	query := `INSERT INTO users (id, email, team_size) VALUES (@id, @email, 1) ON CONFLICT (id) DO NOTHING;`
 	args := pgx.NamedArgs{
 		"id":    user.ID,
 		"email": user.Email,
@@ -90,18 +93,21 @@ func InsertUser(user User) error {
 }
 
 func QueryUser(id string) (User, error) {
-	query := `SELECT id, email FROM users WHERE id = @id;`
+	query := `SELECT id, email, team_size FROM users WHERE id = @id;`
 	args := pgx.NamedArgs{"id": id}
 	row := dbpool.QueryRow(context.Background(), query, args)
 	user := User{}
-	err := row.Scan(&user.ID, &user.Email)
+	err := row.Scan(&user.ID, &user.Email, &user.TeamSize)
 	return user, err
 }
+
+// Done is an integer that show with his binary value the state of completeness of the team :
+// 0b1010 means he completed for his second and forth character
 
 type Progress struct {
 	UserID string
 	CardID int
-	Done   bool
+	Done   int
 }
 
 func tableProgress() error {
@@ -109,35 +115,48 @@ func tableProgress() error {
 		`CREATE TABLE IF NOT EXISTS progress(
 			user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
 			card_id INTEGER REFERENCES cards(id) ON DELETE CASCADE,
-			done BOOLEAN NOT NULL,
+			done INTEGER NOT NULL,
 			PRIMARY KEY(user_id, card_id)
 		);`,
 	)
 	return err
 }
-func (u *User) ToggleProgress(cardID int) error {
+func (u *User) SetProgress(cardID, box int) error {
 	query := `INSERT INTO progress (user_id, card_id, done)
-	VALUES (@user_id, @card_id, true)
+	VALUES (@user_id, @card_id, 1<<@box)
 	ON CONFLICT (user_id, card_id)
-	DO UPDATE SET done = NOT (SELECT done FROM progress WHERE user_id=@user_id AND card_id=@card_id);`
+	DO UPDATE SET done = progress.done # (1<<@box);`
 	args := pgx.NamedArgs{
 		"user_id": u.ID,
 		"card_id": cardID,
+		"box":     box,
 	}
 	_, err := dbpool.Exec(context.Background(), query, args)
 	return err
 }
 
-func (u *User) IsStepDone(cardID int) (bool, error) {
-	query := `SELECT COALESCE ((SELECT done FROM progress WHERE user_id = @user_id AND card_id = @card_id), false);`
+func (u *User) GetDoneValue(cardID int) (int, error) {
+	query := `SELECT COALESCE ((SELECT done FROM progress WHERE user_id = @user_id AND card_id = @card_id), 0);`
 	args := pgx.NamedArgs{
 		"user_id": u.ID,
 		"card_id": cardID,
 	}
 	row := dbpool.QueryRow(context.Background(), query, args)
-	var done bool
+	var done int
 	err := row.Scan(&done)
 	return done, err
+}
+
+func (u *User) PlusTeamSize(value int) error {
+	_, err := dbpool.Exec(
+		context.Background(),
+		`UPDATE users SET team_size = users.team_size + @value WHERE id = @id;`,
+		pgx.NamedArgs{
+			"id":    u.ID,
+			"value": value,
+		},
+	)
+	return err
 }
 
 func tableCard() error {
@@ -200,8 +219,8 @@ func insertCards(cards []parser.Card) error {
 }
 
 type CardUser struct {
-	Card    parser.Card
-	Checked bool
+	Card parser.Card
+	Done int
 }
 
 func (u *User) GetPage(page int) ([]CardUser, error) {
@@ -218,7 +237,7 @@ func (u *User) GetPage(page int) ([]CardUser, error) {
 			dungeon_two,
 			dungeon_three,
 			spell,
-			COALESCE(progress.done, false) AS done
+			COALESCE(progress.done, 0) AS done
 		FROM cards
 		LEFT JOIN progress ON card_id = id AND user_id = @user_id
 		WHERE id >= @min AND id < @max
@@ -231,7 +250,7 @@ func (u *User) GetPage(page int) ([]CardUser, error) {
 	cards := make([]CardUser, 0, pageSize)
 	for rows.Next() {
 		card := parser.Card{}
-		var done bool
+		var done int
 		err = rows.Scan(&card.ID,
 			&card.Level,
 			&card.Info,
@@ -247,7 +266,7 @@ func (u *User) GetPage(page int) ([]CardUser, error) {
 		if err != nil {
 			return nil, err
 		}
-		cards = append(cards, CardUser{Card: card, Checked: done})
+		cards = append(cards, CardUser{Card: card, Done: done})
 	}
 	return cards, nil
 

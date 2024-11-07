@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"optimax/internal/auth"
+	"optiguide/internal/auth"
 
 	"github.com/markbates/goth/gothic"
 )
