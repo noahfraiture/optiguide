@@ -1,3 +1,4 @@
+{{ range .Cards }}
 <div id="card-container-{{ .Card.ID }}">
   <h1>{{ .Card.ID }}</h1>
 
@@ -27,6 +28,6 @@
   <input type="checkbox" hx-get="/toggle?id={{ .Card.ID }}" hx-trigger="change" hx-swap="none" {{ if .Checked }} checked
     {{ end }} />
 </div>
-
-<div hx-get="/card?id={{ inc .Card.ID }}" hx-trigger="revealed" hx-swap="outerHTML">Loading...
+{{ end }}
+<div hx-get="/card?page={{ inc .Page }}" hx-trigger="revealed" hx-swap="outerHTML">Loading...
 </div>

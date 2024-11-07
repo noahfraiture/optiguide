@@ -10,42 +10,33 @@ import (
 	"html/template"
 )
 
-// TODO
 func RenderCard(w http.ResponseWriter, r *http.Request) {
-	idParam := r.URL.Query().Get("id")
-	if idParam == "" {
-		msg := fmt.Sprintf("No card ID: %s", idParam)
+	pageParam := r.URL.Query().Get("page")
+	if pageParam == "" {
+		msg := fmt.Sprintf("No card ID: %s", pageParam)
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	id, err := strconv.Atoi(idParam)
+	page, err := strconv.Atoi(pageParam)
 	if err != nil {
-		msg := fmt.Sprintf("Invalid card ID: %s", idParam)
+		msg := fmt.Sprintf("Invalid card ID: %s", pageParam)
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	card, err := db.GetCard(id)
-	if err != nil {
-		msg := fmt.Sprintf("Card not found: %d", id)
-		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
-
 	userSesssion, err := auth.GetUser(r)
 	if err != nil {
-		msg := fmt.Sprintf("User not found: %s", idParam)
+		msg := fmt.Sprintf("User not found: %s", pageParam)
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 
 	user := db.User{ID: userSesssion.UserID}
-	done, err := user.IsStepDone(card.ID)
+	cardsDone, err := user.GetPage(page)
 	if err != nil {
-		msg := "Card done error"
+		msg := fmt.Sprintf("Card not found: %d", page)
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
@@ -71,7 +62,7 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Card": card, "Checked": done})
+	err = tmpl.Execute(w, map[string]any{"Cards": cardsDone, "Page": page})
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
