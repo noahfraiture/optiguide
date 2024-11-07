@@ -1,4 +1,4 @@
-module optimax
+module optiguide
 
 go 1.23.2
 

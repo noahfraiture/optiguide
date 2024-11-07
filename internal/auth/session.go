@@ -3,7 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
-	"optimax/internal/db"
+	"optiguide/internal/db"
 	"strings"
 
 	"github.com/gorilla/sessions"
