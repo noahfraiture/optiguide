@@ -199,8 +199,14 @@ func insertCards(cards []parser.Card) error {
 	return err
 }
 
-func GetCard(id int) (parser.Card, error) {
-	row := dbpool.QueryRow(context.Background(),
+type CardUser struct {
+	Card    parser.Card
+	Checked bool
+}
+
+func (u *User) GetPage(page int) ([]CardUser, error) {
+	const pageSize = 10
+	rows, err := dbpool.Query(context.Background(),
 		`SELECT
 			id,
 			level,
@@ -211,21 +217,38 @@ func GetCard(id int) (parser.Card, error) {
 			dungeon_one,
 			dungeon_two,
 			dungeon_three,
-			spell 
-		FROM cards WHERE id = @id;`,
-		pgx.NamedArgs{"id": id},
+			spell,
+			COALESCE(progress.done, false) AS done
+		FROM cards
+		LEFT JOIN progress ON card_id = id AND user_id = @user_id
+		WHERE id >= @min AND id < @max
+		ORDER BY id;`,
+		pgx.NamedArgs{"min": page * pageSize, "max": (page + 1) * pageSize, "user_id": u.ID},
 	)
-	card := parser.Card{}
-	return card, row.Scan(&card.ID,
-		&card.Level,
-		&card.Info,
-		&card.TaskOne,
-		&card.TaskTwo,
-		&card.Achievements,
-		&card.DungeonOne,
-		&card.DungeonTwo,
-		&card.DungeonThree,
-		&card.Spell,
-	)
+	if err != nil {
+		return nil, err
+	}
+	cards := make([]CardUser, 0, pageSize)
+	for rows.Next() {
+		card := parser.Card{}
+		var done bool
+		err = rows.Scan(&card.ID,
+			&card.Level,
+			&card.Info,
+			&card.TaskOne,
+			&card.TaskTwo,
+			&card.Achievements,
+			&card.DungeonOne,
+			&card.DungeonTwo,
+			&card.DungeonThree,
+			&card.Spell,
+			&done,
+		)
+		if err != nil {
+			return nil, err
+		}
+		cards = append(cards, CardUser{Card: card, Checked: done})
+	}
+	return cards, nil
 
 }

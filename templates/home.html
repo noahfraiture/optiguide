@@ -4,7 +4,7 @@
 
 {{ if isLoggedIn }}
 <div id="card-container">
-  <div hx-get="/card?id=0" hx-target="#card-container" hx-trigger="load"></div>
+  <div hx-get="/card?page=0" hx-target="#card-container" hx-trigger="load"></div>
 </div>
 {{ else }}
 <h1>You are not connected</h1>
