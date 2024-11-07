@@ -1,21 +1,34 @@
 {{ define "body" }}
 
-<!-- HERE -->
-<div>
-  <button hx-post="/minus" hx-trigger="click" hx-target="#card-container">
-    -
-  </button>
-  <button hx-post="/plus" hx-trigger="click" hx-target="#card-container">
-    +
-  </button>
-</div>
+<div class="min-h-screen bg-gray-100 p-6">
+  {{ if isLoggedIn }}
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <button
+        hx-post="/minus"
+        hx-trigger="click"
+        hx-target="#card-container"
+        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+      >
+        -
+      </button>
+      <button
+        hx-post="/plus"
+        hx-trigger="click"
+        hx-target="#card-container"
+        class="px-4 py-2 bg-green-600 text-white rounded ml-2 hover:bg-green-700 transition"
+      >
+        +
+      </button>
+    </div>
+  </div>
 
-{{ if isLoggedIn }}
-<div id="card-container">
-  <div hx-get="/card?page=0" hx-target="#card-container" hx-trigger="load"></div>
+  <div id="card-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div hx-get="/card?page=0" hx-target="#card-container" hx-trigger="load"></div>
+  </div>
+  {{ else }}
+  <h1 class="text-2xl text-center text-gray-700">You are not connected</h1>
+  {{ end }}
 </div>
-{{ else }}
-<h1>You are not connected</h1>
-{{ end }}
 
 {{ end }}

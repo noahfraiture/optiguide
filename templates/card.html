@@ -1,42 +1,82 @@
 {{ range .Cards }}
-<div id="card-container-{{ .Card.ID }}">
-  <h1>{{ .Card.ID }}</h1>
+<div id="card-container-{{ .Card.ID }}" class="bg-white p-6 shadow-md rounded-lg border border-gray-200 mb-6">
+  <h1 class="text-xl font-semibold text-green-700 mb-4">Card {{ .Card.ID }} - Level {{ .Card.Level }}</h1>
 
-  <div>
-    <h2>{{ .Card.TaskOne }}</h2>
-  </div>
-  <div>
-    <h2>{{ .Card.TaskTwo }}</h2>
-  </div>
-
-  <div>
-    <span>{{ .Card.Info }}</span>
-    <span>{{ .Card.Level }}</span>
-    <span>{{ .Card.Achievements }}</span>
-  </div>
-
-  <div>
-    <h3>Dungeons:</h3>
-    <div>
-      <p>{{ .Card.DungeonOne }}</p>
-      <p>{{ .Card.DungeonTwo }}</p>
+  {{ if .Card.TaskTwo }}
+  <!-- Display for Task Choice -->
+  <div class="mb-4">
+    <h2 class="font-medium text-gray-800">Choose a Path:</h2>
+    <div class="flex space-x-4">
+      <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
+        <h3 class="font-medium text-green-700">Option 1:</h3>
+        <p>{{ .Card.TaskOne }}</p>
+      </div>
+      <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
+        <h3 class="font-medium text-green-700">Option 2:</h3>
+        <p>{{ .Card.TaskTwo }}</p>
+      </div>
     </div>
-    <h3>Spell:</h3>
-    <p>{{ .Card.Spell }}</p>
   </div>
-
-  {{ $done := .Done }}
-  {{ $card := .Card }}
-  {{ range $i := iterate $.Size }}
-  <input
-    type="checkbox"
-    hx-swap="none"
-    hx-trigger="change"
-    hx-get="/toggle?card={{ $card.ID }}&box={{ $i }}"
-    {{ if and $done $i }} checked {{ end }} />
+  {{ else }}
+  <!-- Display for Single Task -->
+  <div class="mb-4">
+    <h2 class="font-medium text-gray-800">Task:</h2>
+    <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
+      <h3 class="font-medium text-green-700">Option 1:</h3>
+      <p>{{ .Card.TaskOne }}</p>
+    </div>
+  </div>
   {{ end }}
 
+  <div class="flex items-center space-x-4 text-gray-600 text-sm mb-4">
+    <span>Info: {{ .Card.Info }}</span>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    {{ if or .Card.DungeonOne .Card.DungeonTwo .Card.DungeonThree }}
+    <div class="mb-4">
+      <h3 class="font-semibold text-gray-700">Dungeons:</h3>
+      <div class="text-gray-600">
+        {{ if .Card.DungeonOne }}
+        <p>- {{ .Card.DungeonOne }}</p>
+        {{ end }}
+        {{ if .Card.DungeonTwo }}
+        <p>- {{ .Card.DungeonTwo }}</p>
+        {{ end }}
+        {{ if .Card.DungeonThree }}
+        <p>- {{ .Card.DungeonThree }}</p>
+        {{ end }}
+      </div>
+    </div>
+    {{ end }}
+
+    <div>
+      <h3 class="font-semibold text-gray-700">Achievements:</h3>
+      {{ range .Card.Achievements }}
+      <p class="text-gray-600">- {{ . }}</p>
+      {{ end }}
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <h3 class="font-semibold text-gray-700">Spell:</h3>
+    <p class="text-gray-600">{{ .Card.Spell }}</p>
+  </div>
+
+  <div class="flex flex-wrap gap-4">
+    {{ $done := .Done }}
+    {{ $card := .Card }}
+    {{ range $i := iterate $.Size }}
+    <label class="flex items-center space-x-2 cursor-pointer">
+      <input type="checkbox" hx-swap="none" hx-trigger="change" hx-get="/toggle?card={{ $card.ID }}&box={{ $i }}" {{ if
+        and $done $i }} checked {{ end }}
+        class="form-checkbox w-6 h-6 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-50 transition-colors duration-200" />
+      <span class="ml-2 text-gray-700 font-medium">Box {{ $i }}</span>
+    </label>
+    {{ end }}
+  </div>
 </div>
 {{ end }}
-<div hx-get="/card?page={{ inc .Page }}" hx-trigger="revealed" hx-swap="outerHTML">Loading...
-</div>
+
+<div hx-get="/card?page={{ inc .Page }}" hx-trigger="revealed" hx-swap="outerHTML"
+  class="text-center mt-4 text-gray-500">Loading...</div>

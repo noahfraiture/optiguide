@@ -15,7 +15,7 @@ type Card struct {
 	Info         string
 	TaskOne      string
 	TaskTwo      string
-	Achievements string
+	Achievements []string
 	DungeonOne   string
 	DungeonTwo   string
 	DungeonThree string
@@ -93,16 +93,35 @@ func Parse(fileName string) ([]Card, error) {
 			return nil, err
 		}
 
+		var dungeonOne string
+		if row.Cells[12].Value == "-" {
+			dungeonOne = ""
+		} else {
+			dungeonOne = row.Cells[12].Value
+		}
+		var dungeonTwo string
+		if row.Cells[14].Value == "-" {
+			dungeonTwo = ""
+		} else {
+			dungeonTwo = row.Cells[12].Value
+		}
+		var dungeonThree string
+		if row.Cells[16].Value == "-" {
+			dungeonThree = ""
+		} else {
+			dungeonThree = row.Cells[12].Value
+		}
+
 		cards = append(cards, Card{
 			ID:           step_number,
 			Level:        level,
 			Info:         info,
 			TaskOne:      row.Cells[6].Value,
 			TaskTwo:      row.Cells[8].Value,
-			Achievements: row.Cells[10].Value,
-			DungeonOne:   row.Cells[12].Value,
-			DungeonTwo:   row.Cells[14].Value,
-			DungeonThree: row.Cells[16].Value,
+			Achievements: strings.Split(row.Cells[10].Value, "\n"),
+			DungeonOne:   dungeonOne,
+			DungeonTwo:   dungeonTwo,
+			DungeonThree: dungeonThree,
 			Spell:        row.Cells[18].Value,
 		})
 		step_number++

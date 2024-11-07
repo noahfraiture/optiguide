@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"optiguide/internal/parser"
 	"os"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -23,7 +24,6 @@ func Init() error {
 		"5432",
 		os.Getenv("POSTGRES_DB"),
 	)
-	fmt.Println(connStr)
 	dbpool, err = pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		fmt.Println(err)
@@ -196,7 +196,7 @@ func insertCards(cards []parser.Card) error {
 			card.Info,
 			card.TaskOne,
 			card.TaskTwo,
-			card.Achievements,
+			strings.Join(card.Achievements, "\n"),
 			card.DungeonOne,
 			card.DungeonTwo,
 			card.DungeonThree,
@@ -250,19 +250,21 @@ func (u *User) GetPage(page int) ([]CardUser, error) {
 	cards := make([]CardUser, 0, pageSize)
 	for rows.Next() {
 		card := parser.Card{}
+		var achievementsStr string
 		var done int
 		err = rows.Scan(&card.ID,
 			&card.Level,
 			&card.Info,
 			&card.TaskOne,
 			&card.TaskTwo,
-			&card.Achievements,
+			&achievementsStr,
 			&card.DungeonOne,
 			&card.DungeonTwo,
 			&card.DungeonThree,
 			&card.Spell,
 			&done,
 		)
+		card.Achievements = strings.Split(achievementsStr, "\n")
 		if err != nil {
 			return nil, err
 		}
