@@ -46,15 +46,13 @@ func Init() error {
 	if err != nil {
 		return err
 	}
-	isFull, err := isCardsFull()
+	err = deleteCards()
 	if err != nil {
 		return err
 	}
-	if !isFull {
-		err = insertCards(cards)
-		if err != nil {
-			return err
-		}
+	err = insertCards(cards)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -177,14 +175,10 @@ func tableCard() error {
 	return err
 }
 
-func isCardsFull() (bool, error) {
-	row := dbpool.QueryRow(
-		context.Background(),
-		`SELECT CASE WHEN EXISTS(SELECT true FROM cards) THEN true ELSE false END;`,
-	)
-	var isFull bool
-	err := row.Scan(&isFull)
-	return isFull, err
+func deleteCards() error {
+	query := "DELETE FROM cards;"
+	_, err := dbpool.Exec(context.Background(), query)
+	return err
 }
 
 func insertCards(cards []parser.Card) error {
@@ -264,7 +258,10 @@ func (u *User) GetPage(page int) ([]CardUser, error) {
 			&card.Spell,
 			&done,
 		)
-		card.Achievements = strings.Split(achievementsStr, "\n")
+		card.Achievements = []string{}
+		if achievementsStr != "" {
+			card.Achievements = strings.Split(achievementsStr, "\n")
+		}
 		if err != nil {
 			return nil, err
 		}
