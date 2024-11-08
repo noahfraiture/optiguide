@@ -50,12 +50,14 @@
     </div>
     {{ end }}
 
+    {{ if .Card.Achievements }}
     <div>
       <h3 class="font-semibold text-gray-700">Achievements:</h3>
       {{ range .Card.Achievements }}
       <p class="text-gray-600">- {{ . }}</p>
       {{ end }}
     </div>
+    {{ end }}
   </div>
 
   <div class="mb-4">
