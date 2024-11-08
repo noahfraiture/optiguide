@@ -93,23 +93,38 @@ func Parse(fileName string) ([]Card, error) {
 			return nil, err
 		}
 
+		// Achievements
+		var achievements []string
+		if row.Cells[10].Value == "-" {
+			achievements = []string{}
+		} else {
+			strings.Split(row.Cells[10].Value, "\n")
+		}
+
+		// Dungeons
+		fmt.Print("start value |")
+		fmt.Print(row.Cells[12].Value)
+		fmt.Println("| end")
+		fmt.Print("start trim |")
+		fmt.Print(strings.Trim(row.Cells[12].Value, " \n\t\r"))
+		fmt.Println("| end")
 		var dungeonOne string
-		if row.Cells[12].Value == "-" {
+		if strings.Trim(row.Cells[12].Value, " \n\t\r") == "-" {
 			dungeonOne = ""
 		} else {
-			dungeonOne = row.Cells[12].Value
+			dungeonOne = strings.Trim(row.Cells[12].Value, " \n\t\r")
 		}
 		var dungeonTwo string
-		if row.Cells[14].Value == "-" {
+		if strings.Trim(row.Cells[14].Value, " \n\t\r") == "-" {
 			dungeonTwo = ""
 		} else {
-			dungeonTwo = row.Cells[12].Value
+			dungeonTwo = strings.Trim(row.Cells[14].Value, " \n\t\r")
 		}
 		var dungeonThree string
-		if row.Cells[16].Value == "-" {
+		if strings.Trim(row.Cells[16].Value, " \n\t\r") == "-" {
 			dungeonThree = ""
 		} else {
-			dungeonThree = row.Cells[12].Value
+			dungeonThree = strings.Trim(row.Cells[16].Value, " \n\t\r")
 		}
 
 		cards = append(cards, Card{
@@ -118,7 +133,7 @@ func Parse(fileName string) ([]Card, error) {
 			Info:         info,
 			TaskOne:      row.Cells[6].Value,
 			TaskTwo:      row.Cells[8].Value,
-			Achievements: strings.Split(row.Cells[10].Value, "\n"),
+			Achievements: achievements,
 			DungeonOne:   dungeonOne,
 			DungeonTwo:   dungeonTwo,
 			DungeonThree: dungeonThree,
