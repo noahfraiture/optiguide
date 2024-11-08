@@ -1,11 +1,10 @@
 {{ range .Cards }}
 <div id="card-container-{{ .Card.ID }}" class="bg-white p-6 shadow-md rounded-lg border border-gray-200 mb-6">
-  <h1 class="text-xl font-semibold text-green-700 mb-4">Card {{ .Card.ID }} - Level {{ .Card.Level }}</h1>
+  <h1 class="text-xl font-semibold text-green-700 mb-4">Etape {{ inc .Card.ID }} - Level {{ .Card.Level }}</h1>
 
   {{ if .Card.TaskTwo }}
   <!-- Display for Task Choice -->
   <div class="mb-4">
-    <h2 class="font-medium text-gray-800">Choose a Path:</h2>
     <div class="flex space-x-4">
       <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
         <h3 class="font-medium text-green-700">Option 1:</h3>
@@ -20,9 +19,8 @@
   {{ else }}
   <!-- Display for Single Task -->
   <div class="mb-4">
-    <h2 class="font-medium text-gray-800">Task:</h2>
     <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
-      <h3 class="font-medium text-green-700">Option 1:</h3>
+      <h3 class="font-medium text-green-700">Tâche:</h3>
       <p>{{ .Card.TaskOne }}</p>
     </div>
   </div>
@@ -35,16 +33,16 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
     {{ if or .Card.DungeonOne .Card.DungeonTwo .Card.DungeonThree }}
     <div class="mb-4">
-      <h3 class="font-semibold text-gray-700">Dungeons:</h3>
+      <h3 class="font-semibold text-gray-700">Donjons:</h3>
       <div class="text-gray-600">
         {{ if .Card.DungeonOne }}
-        <p>- {{ .Card.DungeonOne }}</p>
+        <p>Tour du monde : {{ .Card.DungeonOne }}</p>
         {{ end }}
         {{ if .Card.DungeonTwo }}
-        <p>- {{ .Card.DungeonTwo }}</p>
+        <p>Tornade des donjons : {{ .Card.DungeonTwo }}</p>
         {{ end }}
         {{ if .Card.DungeonThree }}
-        <p>- {{ .Card.DungeonThree }}</p>
+        <p>Autres donjons {{ .Card.DungeonThree }}</p>
         {{ end }}
       </div>
     </div>
@@ -52,7 +50,7 @@
 
     {{ if .Card.Achievements }}
     <div>
-      <h3 class="font-semibold text-gray-700">Achievements:</h3>
+      <h3 class="font-semibold text-gray-700">Succès:</h3>
       {{ range .Card.Achievements }}
       <p class="text-gray-600">- {{ . }}</p>
       {{ end }}
@@ -60,11 +58,16 @@
     {{ end }}
   </div>
 
+  {{ if .Card.Spell }}
   <div class="mb-4">
-    <h3 class="font-semibold text-gray-700">Spell:</h3>
+    <h3 class="font-semibold text-gray-700">Sort Communs:</h3>
     <p class="text-gray-600">{{ .Card.Spell }}</p>
   </div>
+  {{ end }}
 
+  <div class="mb-4">
+    <h3 class="font-semibold text-gray-700">Achèvement:</h3>
+  </div>
   <div class="flex flex-wrap gap-4">
     {{ $done := .Done }}
     {{ $card := .Card }}
@@ -73,7 +76,7 @@
       <input type="checkbox" hx-swap="none" hx-trigger="change" hx-get="/toggle?card={{ $card.ID }}&box={{ $i }}" {{ if
         and $done $i }} checked {{ end }}
         class="form-checkbox w-6 h-6 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-50 transition-colors duration-200" />
-      <span class="ml-2 text-gray-700 font-medium">Box {{ $i }}</span>
+      <span class="ml-2 text-gray-700 font-medium">Perso {{ inc $i }}</span>
     </label>
     {{ end }}
   </div>
