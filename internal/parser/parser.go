@@ -15,7 +15,7 @@ type Card struct {
 	Info         string
 	TaskOne      string
 	TaskTwo      string
-	Achievements []string
+	Achievements string
 	DungeonOne   string
 	DungeonTwo   string
 	DungeonThree string
@@ -93,42 +93,16 @@ func Parse(fileName string) ([]Card, error) {
 			return nil, err
 		}
 
-		// Achievements
-		achievements := []string{}
-		if strings.Trim(row.Cells[10].Value, " \n\t\r-") != "" {
-			achievements = strings.Split(strings.Trim(row.Cells[10].Value, " \n\t\r-"), "\n")
-		}
-
-		// Dungeons
-		var dungeonOne string
-		if strings.Trim(row.Cells[12].Value, " \n\t\r-") == "" {
-			dungeonOne = ""
-		} else {
-			dungeonOne = strings.Trim(row.Cells[12].Value, " \n\t\r")
-		}
-		var dungeonTwo string
-		if strings.Trim(row.Cells[14].Value, " \n\t\r-") == "" {
-			dungeonTwo = ""
-		} else {
-			dungeonTwo = strings.Trim(row.Cells[14].Value, " \n\t\r")
-		}
-		var dungeonThree string
-		if strings.Trim(row.Cells[16].Value, " \n\t\r-") == "" {
-			dungeonThree = ""
-		} else {
-			dungeonThree = strings.Trim(row.Cells[16].Value, " \n\t\r")
-		}
-
 		cards = append(cards, Card{
 			ID:           step_number,
 			Level:        level,
 			Info:         info,
 			TaskOne:      row.Cells[6].Value,
 			TaskTwo:      row.Cells[8].Value,
-			Achievements: achievements,
-			DungeonOne:   dungeonOne,
-			DungeonTwo:   dungeonTwo,
-			DungeonThree: dungeonThree,
+			Achievements: strings.Trim(row.Cells[10].Value, " \n\t\r-"),
+			DungeonOne:   strings.Trim(row.Cells[12].Value, " \n\t\r-"),
+			DungeonTwo:   strings.Trim(row.Cells[14].Value, " \n\t\r-"),
+			DungeonThree: strings.Trim(row.Cells[16].Value, " \n\t\r-"),
 			Spell:        row.Cells[18].Value,
 		})
 		step_number++

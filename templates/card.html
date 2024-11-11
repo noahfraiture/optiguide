@@ -1,18 +1,18 @@
 {{ range .Cards }}
-<div id="card-container-{{ .Card.ID }}" class="bg-white p-6 shadow-md rounded-lg border border-gray-200 mb-6">
-  <h1 class="text-xl font-semibold text-green-700 mb-4">Etape {{ inc .Card.ID }} - Level {{ .Card.Level }}</h1>
+<div id="card-container-{{ .ID }}" class="bg-white p-6 shadow-md rounded-lg border border-gray-200 mb-6">
+  <h1 class="text-xl font-semibold text-green-700 mb-4">Etape {{ inc .ID }} - Level {{ .Level }}</h1>
 
-  {{ if .Card.TaskTwo }}
+  {{ if .TaskTwo }}
   <!-- Display for Task Choice -->
   <div class="mb-4">
     <div class="flex space-x-4">
       <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
         <h3 class="font-medium text-green-700">Option 1:</h3>
-        <p>{{ .Card.TaskOne }}</p>
+        <p>{{ .TaskOne }}</p>
       </div>
       <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
         <h3 class="font-medium text-green-700">Option 2:</h3>
-        <p>{{ .Card.TaskTwo }}</p>
+        <p>{{ .TaskTwo }}</p>
       </div>
     </div>
   </div>
@@ -21,47 +21,47 @@
   <div class="mb-4">
     <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
       <h3 class="font-medium text-green-700">Tâche:</h3>
-      <p>{{ .Card.TaskOne }}</p>
+      <p>{{ .TaskOne }}</p>
     </div>
   </div>
   {{ end }}
 
   <div class="flex items-center space-x-4 text-gray-600 text-sm mb-4">
-    <span>Info: {{ .Card.Info }}</span>
+    <span>Info: {{ .Info }}</span>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-    {{ if or .Card.DungeonOne .Card.DungeonTwo .Card.DungeonThree }}
+    {{ if or .DungeonOne .DungeonTwo .DungeonThree }}
     <div class="mb-4">
       <h3 class="font-semibold text-gray-700">Donjons:</h3>
       <div class="text-gray-600">
-        {{ if .Card.DungeonOne }}
-        <p>Tour du monde : {{ .Card.DungeonOne }}</p>
+        {{ if .DungeonOne }}
+        <p>Tour du monde : {{ .DungeonOne }}</p>
         {{ end }}
-        {{ if .Card.DungeonTwo }}
-        <p>Tornade des donjons : {{ .Card.DungeonTwo }}</p>
+        {{ if .DungeonTwo }}
+        <p>Tornade des donjons : {{ .DungeonTwo }}</p>
         {{ end }}
-        {{ if .Card.DungeonThree }}
-        <p>Autres donjons {{ .Card.DungeonThree }}</p>
+        {{ if .DungeonThree }}
+        <p>Autres donjons {{ .DungeonThree }}</p>
         {{ end }}
       </div>
     </div>
     {{ end }}
 
-    {{ if .Card.Achievements }}
+    {{ if .Achievements }}
     <div>
       <h3 class="font-semibold text-gray-700">Succès:</h3>
-      {{ range .Card.Achievements }}
+      {{ range .Achievements }}
       <p class="text-gray-600">- {{ . }}</p>
       {{ end }}
     </div>
     {{ end }}
   </div>
 
-  {{ if .Card.Spell }}
+  {{ if .Spell }}
   <div class="mb-4">
     <h3 class="font-semibold text-gray-700">Sort Communs:</h3>
-    <p class="text-gray-600">{{ .Card.Spell }}</p>
+    <p class="text-gray-600">{{ .Spell }}</p>
   </div>
   {{ end }}
 
@@ -69,14 +69,19 @@
     <h3 class="font-semibold text-gray-700">Achèvement:</h3>
   </div>
   <div class="flex flex-wrap gap-4">
-    {{ $done := .Done }}
     {{ $card := .Card }}
+    {{ $boxes := index $.Boxes $card.ID }}
+
     {{ range $i := iterate $.Size }}
     <label class="flex items-center space-x-2 cursor-pointer">
-      <input type="checkbox" hx-swap="none" hx-trigger="change" hx-get="/toggle?card={{ $card.ID }}&box={{ $i }}" {{ if
-        and $done $i }} checked {{ end }}
+      <input
+        type="checkbox"
+        hx-swap="none"
+        hx-trigger="change"
+        hx-get="/toggle?card={{ $card.ID }}&box={{ $i }}"
+        {{ if doneAt $boxes $i }} checked {{ end }}
         class="form-checkbox w-6 h-6 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-50 transition-colors duration-200" />
-      <span class="ml-2 text-gray-700 font-medium">Perso {{ inc $i }}</span>
+      <span class="ml-2 text-gray-700 font-medium">Perso {{ classAt $boxes $i }}</span>
     </label>
     {{ end }}
   </div>

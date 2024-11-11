@@ -37,22 +37,24 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "box", http.StatusBadRequest)
 		return
 	}
-	box, err := strconv.Atoi(boxStr)
+	boxIndex, err := strconv.Atoi(boxStr)
 	if err != nil {
+		fmt.Println("No box value")
 		http.Error(w, "box value", http.StatusBadRequest)
 		return
 	}
 
-	// NOTE: could remove this call since we only need userid
-	user, err := db.QueryUser(userAuth.UserID)
-	fmt.Println(box)
+	dbPool, err := db.GetPool()
 	if err != nil {
-		http.Error(w, "set progress", http.StatusBadRequest)
+		fmt.Println("Can't get db")
+		http.Error(w, "Can't get db", http.StatusInternalServerError)
 		return
 	}
-	err = user.SetProgress(cardID, box)
+
+	err = db.ToggleProgress(dbPool, userAuth.UserID, cardID, boxIndex)
 	if err != nil {
-		http.Error(w, "set progress", http.StatusBadRequest)
+		fmt.Println("toggle error")
+		http.Error(w, "toggle progress", http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

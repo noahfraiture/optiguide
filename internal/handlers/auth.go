@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"optiguide/internal/auth"
+	"optiguide/internal/db"
 
 	"github.com/markbates/goth/gothic"
 )
@@ -26,7 +27,12 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error during authentication", http.StatusInternalServerError)
 		return
 	}
-	err = auth.SaveUser(user, w, r)
+	dbPool, err := db.GetPool()
+	if err != nil {
+		http.Error(w, "Can't get db", http.StatusInternalServerError)
+		return
+	}
+	err = auth.SaveUser(dbPool, user, w, r)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Error during saving user", http.StatusInternalServerError)
