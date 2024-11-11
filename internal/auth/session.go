@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/sessions"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/markbates/goth"
 )
 
@@ -29,7 +30,7 @@ func GetUser(r *http.Request) (goth.User, error) {
 	return user, nil
 }
 
-func SaveUser(user goth.User, w http.ResponseWriter, r *http.Request) error {
+func SaveUser(dbpool *pgxpool.Pool, user goth.User, w http.ResponseWriter, r *http.Request) error {
 	session, err := store.Get(r, "user-session")
 	if err != nil && !strings.Contains(err.Error(), "securecookie: the value is not valid") {
 		return err
@@ -39,7 +40,7 @@ func SaveUser(user goth.User, w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	return db.InsertUser(db.User{ID: user.UserID, Email: user.Email})
+	return db.InsertUser(dbpool, db.User{ID: user.UserID, Email: user.Email})
 }
 
 func ClearSession(w http.ResponseWriter, r *http.Request) error {
