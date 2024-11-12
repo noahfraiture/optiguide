@@ -75,7 +75,7 @@ const (
 	CRA
 	FECA
 	SACRIEUR
-	SADIDAS
+	SADIDA
 	OSAMODAS
 	ENUTROF
 	SRAM
@@ -88,6 +88,8 @@ const (
 	HUPPERMAGE
 	OUGINAK
 	FORGELANCE
+
+	NB_CLASS
 )
 
 var ClassToName = map[Class]string{
@@ -98,7 +100,7 @@ var ClassToName = map[Class]string{
 	CRA:        "CRA",
 	FECA:       "FECA",
 	SACRIEUR:   "SACRIEUR",
-	SADIDAS:    "SADIDAS",
+	SADIDA:     "SADIDA",
 	OSAMODAS:   "OSAMODAS",
 	ENUTROF:    "ENUTROF",
 	SRAM:       "SRAM",

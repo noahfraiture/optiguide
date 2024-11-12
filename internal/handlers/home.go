@@ -12,14 +12,25 @@ import (
 type HomeData struct {
 	Boxes    []db.UserBox
 	LoggedIn bool
+	NbClass  db.Class
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.
 		New("base.html").
 		Funcs(template.FuncMap{
-			"renderAuthButton":    renderAuthButton,
-			"renderIconFromClass": renderIconFromClass,
+			"renderAuthButton": renderAuthButton,
+			"nameFromClass":    nameFromClass,
+			"inc": func(i int) int {
+				return i + 1
+			},
+			"iterate": func(max db.Class) []db.Class {
+				r := make([]db.Class, max)
+				for i := range max {
+					r[i] = i
+				}
+				return r
+			},
 		}).
 		ParseFiles("templates/base.html", "templates/topbar.html", "templates/home.html")
 	if err != nil {
@@ -35,7 +46,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := HomeData{}
+	data := HomeData{NbClass: db.NB_CLASS}
 
 	userAuth, err := auth.GetUser(r)
 	if err != nil {
@@ -68,6 +79,6 @@ func renderAuthButton(isLoggedIn bool) string {
 	return `<a href="/auth/google" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-block text-center">Login with Google</a>`
 }
 
-func renderIconFromClass(class db.Class) string {
-	return fmt.Sprintf("/static/images/%s.avif", db.ClassToName[class])
+func nameFromClass(class db.Class) string {
+	return db.ClassToName[db.Class(class)]
 }
