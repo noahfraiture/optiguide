@@ -32,7 +32,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 				return r
 			},
 		}).
-		ParseFiles("templates/base.html", "templates/topbar.html", "templates/home.html")
+		ParseFiles("templates/base.html", "templates/topbar.html", "templates/home.html", "templates/class-picker.html")
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
