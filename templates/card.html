@@ -1,6 +1,6 @@
 {{ range .Cards }}
 <div id="card-container-{{ .ID }}" class="bg-white p-6 shadow-md rounded-lg border border-gray-200 mb-6">
-  <h1 class="text-xl font-semibold text-green-700 mb-4">Etape {{ inc .ID }} - Level {{ .Level }}</h1>
+  <h1 class="text-xl font-semibold text-green-700 mb-4">Etape {{ add .ID 1 }} - Level {{ .Level }}</h1>
 
   {{ if .TaskTwo }}
   <!-- Display for Task Choice -->
@@ -78,7 +78,7 @@
         type="checkbox"
         hx-swap="none"
         hx-trigger="change"
-        hx-get="/toggle?card={{ $card.ID }}&box={{ $i }}"
+        hx-get="/card/toggle?card={{ $card.ID }}&box={{ $i }}"
         {{ if doneAt $boxes $i }} checked {{ end }}
         class="form-checkbox w-6 h-6 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-50 transition-colors duration-200" />
       <span class="ml-2 text-gray-700 font-medium">Perso {{ classAt $boxes $i }}</span>
@@ -88,5 +88,5 @@
 </div>
 {{ end }}
 
-<div hx-get="/card?page={{ inc .Page }}" hx-trigger="revealed" hx-swap="outerHTML"
+<div hx-get="/card?page={{ add .Page 1 }}" hx-trigger="revealed" hx-swap="outerHTML"
   class="text-center mt-4 text-gray-500">Loading...</div>

@@ -38,7 +38,7 @@ func InsertUser(db *pgxpool.Pool, user User) error {
 	if err != nil {
 		return err
 	}
-	err = InsertClass(db, user.ID, 0, NONE)
+	_, err = InsertClass(db, user.ID, 0, NONE)
 	return err
 }
 
@@ -145,24 +145,39 @@ func UpdateClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) err
 	return err
 }
 
-func InsertClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) error {
+func InsertClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) (UserBox, error) {
 	query :=
-		`INSERT INTO user_box(user_id, box_index, class)
-		VALUES (@user_id, @box_index, @class)
-		ON CONFLICT DO NOTHING;`
-	_, err := db.Exec(context.Background(), query, pgx.NamedArgs{
+		`WITH inputs(user_id, box_index, class) AS (
+	        VALUES (@user_id::text, @box_index::integer, @class::integer)
+	    ), ins AS (
+	    	INSERT INTO user_box (user_id, box_index, class)
+	    	SELECT * FROM inputs
+	    	ON CONFLICT (user_id, box_index) DO NOTHING
+	    	RETURNING class, box_index
+		), existing AS (
+			SELECT class, box_index
+			FROM user_box
+			WHERE user_id = @user_id AND box_index = @box_index
+		)
+		SELECT class, box_index FROM ins UNION SELECT class, box_index FROM existing;`
+
+	userBox := UserBox{userID: userID}
+
+	row := db.QueryRow(context.Background(), query, pgx.NamedArgs{
 		"user_id":   userID,
 		"box_index": boxIndex,
 		"class":     class,
 	})
-	return err
+	err := row.Scan(&userBox.Class, &userBox.BoxIndex)
+	return userBox, err
 }
 
 func GetClasses(db *pgxpool.Pool, userID string) ([]UserBox, error) {
 	query :=
 		`SELECT user_id, box_index, class
 		FROM user_box
-		WHERE user_id = @user_id
+		JOIN users ON id = user_id
+		WHERE user_id = @user_id AND box_index < team_size
 		ORDER BY box_index;`
 	args := pgx.NamedArgs{"user_id": userID}
 	rows, err := db.Query(context.Background(), query, args)
