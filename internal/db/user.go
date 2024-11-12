@@ -80,7 +80,7 @@ const (
 	ENUTROF
 	SRAM
 	XELOR
-	PANDA
+	PANDAWA
 	ROUBLARD
 	ZOBAL
 	STEAMER
@@ -105,7 +105,7 @@ var ClassToName = map[Class]string{
 	ENUTROF:    "ENUTROF",
 	SRAM:       "SRAM",
 	XELOR:      "XELOR",
-	PANDA:      "PANDA",
+	PANDAWA:    "PANDAWA",
 	ROUBLARD:   "ROUBLARD",
 	ZOBAL:      "ZOBAL",
 	STEAMER:    "STEAMER",
