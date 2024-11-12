@@ -37,18 +37,6 @@ func Init() error {
 		return err
 	}
 
-	err = tableUser(dbPool)
-	if err != nil {
-		return err
-	}
-	err = tableUserClass(dbPool)
-	if err != nil {
-		return err
-	}
-	err = tableProgress(dbPool)
-	if err != nil {
-		return err
-	}
 	err = tableCard(dbPool)
 	if err != nil {
 		return err
@@ -62,6 +50,19 @@ func Init() error {
 		return err
 	}
 	err = insertCards(dbPool, cards)
+	if err != nil {
+		return err
+	}
+
+	err = tableUser(dbPool)
+	if err != nil {
+		return err
+	}
+	err = tableUserClass(dbPool)
+	if err != nil {
+		return err
+	}
+	err = tableProgress(dbPool)
 	if err != nil {
 		return err
 	}

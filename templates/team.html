@@ -1,0 +1,93 @@
+{{ define "class-picker" }}
+<div class="flex justify-between items-center mb-4">
+  <div>
+    <button hx-post="/card/minus" hx-trigger="click" hx-swap="delete" hx-target=".dropdown:last-child"
+      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+      -
+    </button>
+    <button hx-post="/card/plus" hx-trigger="click" hx-swap="afterend" hx-target=".dropdown:last-child"
+      class="px-4 py-2 bg-green-600 text-white rounded ml-2 hover:bg-green-700 transition">
+      +
+    </button>
+  </div>
+</div>
+
+<div class="flex space-x-4 mb-4">
+  <!-- Class picker for every character of the team -->
+  {{ range .Boxes }}
+  <!-- picker in a separated file to be able to add one with button plus -->
+  {{ block "picker" . }}{{ end }}
+
+  {{ end }}
+</div>
+{{ end }}
+
+{{ define "picker" }}
+<div class="relative inline-block text-left dropdown">
+  <button type="button"
+    class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+    <!-- Icon of the character picked and its name -->
+    Perso {{ add .BoxIndex 1 }}
+    {{ renderIcon .Class .BoxIndex }}
+    <svg class="ml-2 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+      aria-hidden="true">
+      <path fill-rule="evenodd"
+        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+        clip-rule="evenodd" />
+    </svg>
+  </button>
+  <div
+    class="dropdown-content origin-top-right absolute right-0 mt-0 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden"
+    style="top: 100%; left: 0; z-index: 10; transform: translateY(-1px);">
+    <div class="py-1">
+      <!-- Every possibility of the dropdown menu -->
+      {{ $index := .BoxIndex }}
+      {{ range $i := iterate nbClass }}
+      <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 items-center cursor-pointer"
+        hx-post="/pick-class?class={{ $i }}&index={{ $index }}" hx-trigger="click" hx-target="#icon-{{ $index }}"
+        hx-swap="outerHTML">
+        <img src="/static/images/{{ nameFromClass $i }}.avif" alt="{{ nameFromClass $i }}"
+          class="inline-block h-6 w-6 mr-2">
+        {{ nameFromClass $i }}
+      </a>
+      {{ end }}
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var dropdown = this.closest('.dropdown');
+      var dropdownContent = dropdown.querySelector('.dropdown-content');
+      var dropbtn = dropdown.querySelector('.dropbtn');
+
+      dropdown.addEventListener('mouseenter', function () {
+        if (dropdownContent && dropbtn) {
+          dropdownContent.classList.remove('hidden');
+          dropbtn.classList.add('bg-green-700');
+          adjustDropdownPosition(dropdownContent, dropdown);
+        }
+      });
+
+      dropdown.addEventListener('mouseleave', function () {
+        if (dropdownContent && dropbtn) {
+          dropdownContent.classList.add('hidden');
+          dropbtn.classList.remove('bg-green-700');
+        }
+      });
+
+      function adjustDropdownPosition(dropdownContent, dropdown) {
+        var rect = dropdown.getBoundingClientRect();
+        var windowWidth = window.innerWidth;
+        if (rect.left + dropdownContent.offsetWidth > windowWidth) {
+          dropdownContent.style.left = 'auto';
+          dropdownContent.style.right = '0';
+        } else {
+          dropdownContent.style.left = '0';
+          dropdownContent.style.right = 'auto';
+        }
+      }
+    }).call(document.currentScript.previousElementSibling);
+  </script>
+
+</div>
+{{ end }}

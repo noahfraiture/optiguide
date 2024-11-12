@@ -1,10 +1,11 @@
-package handlers
+package home
 
 import (
 	"fmt"
 	"net/http"
 	"optiguide/internal/auth"
 	"optiguide/internal/db"
+	topbar "optiguide/internal/handlers/page"
 	"sort"
 	"text/template"
 )
@@ -12,27 +13,49 @@ import (
 type HomeData struct {
 	Boxes    []db.UserBox
 	LoggedIn bool
-	NbClass  db.Class
+}
+
+var funcsHome = template.FuncMap{
+	"add": func(i, j int) int {
+		return i + j
+	},
+	"minus": func(i, j int) int {
+		return i - j
+	},
+	"iterate": func(max int) []int {
+		r := make([]int, max)
+		for i := range max {
+			r[i] = i
+		}
+		return r
+	},
+	// Functions instead of `index . .` in html template, help to provide default value
+	"doneAt": func(boxes map[int]db.BoxState, index int) bool {
+		if box, ok := boxes[index]; ok {
+			return box.Done
+		}
+		return false
+	},
+	"classAt": func(boxes map[int]db.BoxState, i int) db.Class {
+		if box, ok := boxes[i]; ok {
+			return box.Class
+		}
+		return db.NONE
+	},
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
+	funcs := funcsHome
+	for k, v := range topbar.FuncsTopbar {
+		funcs[k] = v
+	}
+	for k, v := range funcsTeam {
+		funcs[k] = v
+	}
 	tmpl, err := template.
 		New("base.html").
-		Funcs(template.FuncMap{
-			"renderAuthButton": renderAuthButton,
-			"nameFromClass":    nameFromClass,
-			"inc": func(i int) int {
-				return i + 1
-			},
-			"iterate": func(max db.Class) []db.Class {
-				r := make([]db.Class, max)
-				for i := range max {
-					r[i] = i
-				}
-				return r
-			},
-		}).
-		ParseFiles("templates/base.html", "templates/topbar.html", "templates/home.html", "templates/class-picker.html")
+		Funcs(funcs).
+		ParseFiles("templates/base.html", "templates/topbar.html", "templates/home.html", "templates/team.html")
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
@@ -46,7 +69,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := HomeData{NbClass: db.NB_CLASS}
+	data := HomeData{}
 
 	userAuth, err := auth.GetUser(r)
 	if err != nil {
@@ -70,15 +93,4 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error executing template", http.StatusInternalServerError)
 		return
 	}
-}
-
-func renderAuthButton(isLoggedIn bool) string {
-	if isLoggedIn {
-		return `<a href="/logout" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded inline-block text-center">Logout</a>`
-	}
-	return `<a href="/auth/google" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-block text-center">Login with Google</a>`
-}
-
-func nameFromClass(class db.Class) string {
-	return db.ClassToName[db.Class(class)]
 }
