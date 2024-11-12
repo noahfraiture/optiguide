@@ -152,13 +152,13 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 				}
 				return r
 			},
-			"doneAt": func(m map[int]db.Box, i int) bool {
+			"doneAt": func(m map[int]db.BoxState, i int) bool {
 				if box, ok := m[i]; ok {
 					return box.Done
 				}
 				return false
 			},
-			"classAt": func(m map[int]db.Box, i int) db.Class {
+			"classAt": func(m map[int]db.BoxState, i int) db.Class {
 				if box, ok := m[i]; ok {
 					return box.Class
 				}

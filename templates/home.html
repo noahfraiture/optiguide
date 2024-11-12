@@ -1,7 +1,7 @@
 {{ define "body" }}
 
 <div class="min-h-screen bg-gray-100 p-6">
-  {{ if isLoggedIn }}
+  {{ if .LoggedIn }}
   <div class="flex justify-between items-center mb-4">
     <div>
       <button
@@ -22,6 +22,17 @@
       </button>
     </div>
   </div>
+
+  {{ range .Boxes }}
+  {{ renderIconFromClass .Class }}
+  <img src="{{ renderIconFromClass .Class }}">
+  <select>
+    <option value="volvo">Volvo</option>
+    <option value="saab">Saab</option>
+    <option value="mercedes">Mercedes</option>
+    <option value="audi">Audi</option>
+  </select>
+  {{ end }}
 
   <div id="card-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <div hx-get="/card?page=0" hx-target="#card-container" hx-trigger="load"></div>
