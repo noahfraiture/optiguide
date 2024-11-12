@@ -90,10 +90,33 @@ const (
 	FORGELANCE
 )
 
+var ClassToName = map[Class]string{
+	NONE:       "NONE",
+	ECAFLIP:    "ECAFLIP",
+	ENIRIPSA:   "ENIRIPSA",
+	IOP:        "IOP",
+	CRA:        "CRA",
+	FECA:       "FECA",
+	SACRIEUR:   "SACRIEUR",
+	SADIDAS:    "SADIDAS",
+	OSAMODAS:   "OSAMODAS",
+	ENUTROF:    "ENUTROF",
+	SRAM:       "SRAM",
+	XELOR:      "XELOR",
+	PANDA:      "PANDA",
+	ROUBLARD:   "ROUBLARD",
+	ZOBAL:      "ZOBAL",
+	STEAMER:    "STEAMER",
+	ELIOTROPE:  "ELIOTROPE",
+	HUPPERMAGE: "HUPPERMAGE",
+	OUGINAK:    "OUGINAK",
+	FORGELANCE: "FORGELANCE",
+}
+
 type UserBox struct {
 	userID   string
-	boxIndex int
-	class    Class
+	BoxIndex int
+	Class    Class
 }
 
 func tableUserClass(db *pgxpool.Pool) error {
@@ -133,7 +156,7 @@ func InsertClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) err
 	return err
 }
 
-func GetBoxes(db *pgxpool.Pool, userID string) ([]UserBox, error) {
+func GetClasses(db *pgxpool.Pool, userID string) ([]UserBox, error) {
 	query :=
 		`SELECT user_id, box_index, class
 		FROM user_box
@@ -148,7 +171,7 @@ func GetBoxes(db *pgxpool.Pool, userID string) ([]UserBox, error) {
 	boxes := make([]UserBox, 0)
 	for rows.Next() {
 		box := UserBox{}
-		err := rows.Scan(&box.userID, &box.boxIndex, &box.class)
+		err := rows.Scan(&box.userID, &box.BoxIndex, &box.Class)
 		if err != nil {
 			return nil, err
 		}
@@ -158,14 +181,14 @@ func GetBoxes(db *pgxpool.Pool, userID string) ([]UserBox, error) {
 }
 
 // Not a table in the database but used for the html render
-type Box struct {
+type BoxState struct {
 	Done  bool
 	Class Class
 }
-type Boxes map[int]Box // Box state by index
+type BoxesState map[int]BoxState // Box state by index
 
 // Merge between Progress and UserBox
-func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]Boxes, error) {
+func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, error) {
 	query := `SELECT
 		progress.card_id, user_box.box_index, progress.done, user_box.class
 		FROM user_box
@@ -179,9 +202,9 @@ func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]Boxes, error)
 		return nil, err
 	}
 
-	cardBoxes := make(map[int]Boxes, 0)
+	cardBoxes := make(map[int]BoxesState, 0)
 	for rows.Next() {
-		var box Box
+		var box BoxState
 		var box_index int
 		var card_id int
 		err = rows.Scan(&card_id, &box_index, &box.Done, &box.Class)
@@ -189,7 +212,7 @@ func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]Boxes, error)
 			return nil, err
 		}
 		if _, ok := cardBoxes[card_id]; !ok {
-			cardBoxes[card_id] = make(Boxes)
+			cardBoxes[card_id] = make(BoxesState)
 		}
 		cardBoxes[card_id][box_index] = box
 	}

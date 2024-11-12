@@ -41,13 +41,6 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
-func RenderAuthButton(isLoggedIn bool) string {
-	if isLoggedIn {
-		return `<a href="/logout" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded inline-block text-center">Logout</a>`
-	}
-	return `<a href="/auth/google" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-block text-center">Login with Google</a>`
-}
-
 func Logout(w http.ResponseWriter, r *http.Request) {
 	// Clear the session
 	err := auth.ClearSession(w, r)
