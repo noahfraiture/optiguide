@@ -11,7 +11,7 @@ import (
 )
 
 type HomeData struct {
-	Boxes    []db.UserBox
+	Team     []db.UserBox
 	LoggedIn bool
 }
 
@@ -30,18 +30,21 @@ var funcsHome = template.FuncMap{
 		return r
 	},
 	// Functions instead of `index . .` in html template, help to provide default value
-	"doneAt": func(boxes map[int]db.BoxState, index int) bool {
-		if box, ok := boxes[index]; ok {
-			return box.Done
+	"doneAt": func(boxes db.BoxesState, boxIndex int) bool {
+		if box, ok := boxes[boxIndex]; ok {
+			return box
 		}
 		return false
 	},
-	"classAt": func(boxes map[int]db.BoxState, i int) db.Class {
-		if box, ok := boxes[i]; ok {
-			return box.Class
+	"classAt": func(boxes []db.UserBox, boxIndex int) db.Class {
+		for _, box := range boxes {
+			if box.BoxIndex == boxIndex {
+				return box.Class
+			}
 		}
 		return db.NONE
 	},
+	"renderIcon": renderIcon,
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
@@ -77,10 +80,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		data.LoggedIn = false
 	} else {
 		data.LoggedIn = true
-		data.Boxes, err = db.GetClasses(dbPool, userAuth.UserID)
+		data.Team, err = db.GetClasses(dbPool, userAuth.UserID)
 		sort.Slice(
-			data.Boxes,
-			func(i, j int) bool { return data.Boxes[i].BoxIndex < data.Boxes[j].BoxIndex },
+			data.Team,
+			func(i, j int) bool { return data.Team[i].BoxIndex < data.Team[j].BoxIndex },
 		)
 		if err != nil {
 			fmt.Println(err)

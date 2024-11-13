@@ -10,6 +10,14 @@ import (
 	"html/template"
 )
 
+type CardData struct {
+	Cards      []db.Card
+	Team       []db.UserBox
+	BoxesState map[int]db.BoxesState
+	Page       int
+	Size       int
+}
+
 func RenderCard(w http.ResponseWriter, r *http.Request) {
 	dbPool, err := db.GetPool()
 	if err != nil {
@@ -69,6 +77,13 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 		return
 	}
 
+	team, err := db.GetClasses(dbPool, user.ID)
+	if err != nil {
+		fmt.Println("Can't get team", err)
+		http.Error(w, "Can't get team", http.StatusInternalServerError)
+		return
+	}
+
 	tmpl, err := template.
 		New("card.html").
 		Funcs(funcsHome).
@@ -79,11 +94,12 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 		return
 	}
 
-	err = tmpl.Execute(w, map[string]any{
-		"Cards": cards,
-		"Boxes": boxes,
-		"Page":  page,
-		"Size":  user.TeamSize,
+	err = tmpl.Execute(w, CardData{
+		Cards:      cards,
+		Team:       team,
+		BoxesState: boxes,
+		Page:       page,
+		Size:       user.TeamSize,
 	})
 	if err != nil {
 		fmt.Println(err)
