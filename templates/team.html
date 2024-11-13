@@ -14,7 +14,7 @@
 
 <div class="flex space-x-4 mb-4">
   <!-- Class picker for every character of the team -->
-  {{ range .Boxes }}
+  {{ range .Team }}
   <!-- picker in a separated file to be able to add one with button plus -->
   {{ block "picker" . }}{{ end }}
 
@@ -27,7 +27,6 @@
   <button type="button"
     class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
     <!-- Icon of the character picked and its name -->
-    Perso {{ add .BoxIndex 1 }}
     {{ renderIcon .Class .BoxIndex }}
     <svg class="ml-2 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
       aria-hidden="true">
@@ -43,12 +42,10 @@
       <!-- Every possibility of the dropdown menu -->
       {{ $index := .BoxIndex }}
       {{ range $i := iterate nbClass }}
-      <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 items-center cursor-pointer"
+      <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 items-center cursor-pointer"
         hx-post="/pick-class?class={{ $i }}&index={{ $index }}" hx-trigger="click" hx-target="#icon-{{ $index }}"
         hx-swap="outerHTML">
-        <img src="/static/images/{{ nameFromClass $i }}.avif" alt="{{ nameFromClass $i }}"
-          class="inline-block h-6 w-6 mr-2">
-        {{ nameFromClass $i }}
+        {{ renderIcon $i $index }}
       </a>
       {{ end }}
     </div>

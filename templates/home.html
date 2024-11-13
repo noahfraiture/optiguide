@@ -5,6 +5,7 @@
   {{ block "class-picker" . }}{{ end }}
 
   <div id="card-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Call the first page of cards -->
     <div hx-get="/card?page=0" hx-target="#card-container" hx-trigger="load"></div>
   </div>
   {{ else }}

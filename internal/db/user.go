@@ -198,16 +198,14 @@ func GetClasses(db *pgxpool.Pool, userID string) ([]UserBox, error) {
 }
 
 // Not a table in the database but used for the html render
-type BoxState struct {
-	Done  bool
-	Class Class
-}
-type BoxesState map[int]BoxState // Box state by index
+type BoxesState map[int]bool // Box state by index
 
 // Merge between Progress and UserBox
 func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, error) {
+	// We can't make a LEFT JOIN to have `done` as false for a default value
+	// Because we can't know `card_id`
 	query := `SELECT
-		progress.card_id, user_box.box_index, progress.done, user_box.class
+		progress.card_id, user_box.box_index, progress.done
 		FROM user_box
 		JOIN progress on progress.box_index = user_box.box_index
 		WHERE user_box.user_id = @user_id;`
@@ -221,17 +219,17 @@ func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, e
 
 	cardBoxes := make(map[int]BoxesState, 0)
 	for rows.Next() {
-		var box BoxState
+		var done bool
 		var box_index int
 		var card_id int
-		err = rows.Scan(&card_id, &box_index, &box.Done, &box.Class)
+		err = rows.Scan(&card_id, &box_index, &done)
 		if err != nil {
 			return nil, err
 		}
 		if _, ok := cardBoxes[card_id]; !ok {
 			cardBoxes[card_id] = make(BoxesState)
 		}
-		cardBoxes[card_id][box_index] = box
+		cardBoxes[card_id][box_index] = done
 	}
 	return cardBoxes, nil
 }

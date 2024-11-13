@@ -2,18 +2,17 @@ package home
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"optiguide/internal/auth"
 	"optiguide/internal/db"
 	"strconv"
-	"text/template"
 )
 
 var funcsTeam = template.FuncMap{
-	"nameFromClass": nameFromClass,
-	"renderIcon":    renderIcon,
-	"nbClass":       func() int { return int(db.NB_CLASS) },
-	"add":           func(i, j int) int { return i + j },
+	"renderIcon": renderIcon,
+	"nbClass":    func() int { return int(db.NB_CLASS) },
+	"add":        func(i, j int) int { return i + j },
 	"iterate": func(max int) []int {
 		r := make([]int, max)
 		for i := range max {
@@ -23,8 +22,24 @@ var funcsTeam = template.FuncMap{
 	},
 }
 
-func renderIcon(class db.Class, boxIndex int) string {
-	return fmt.Sprintf(`<img id="icon-%d" src="/static/images/%s.avif"</button>`, boxIndex, nameFromClass(int(class)))
+func renderIcon(class any, boxIndex int) template.HTML {
+	var i int
+	switch v := class.(type) {
+	case int:
+		i = v
+	case db.Class:
+		i = int(v)
+	default:
+		return ""
+	}
+	return template.HTML(fmt.Sprintf(
+		`<div id="icon-%d">
+		<img src="/static/images/%[2]s.avif" alt=%[2]s class="inline-block h-6 w-6 mr-2">
+		%[2]s
+		</div>`,
+		boxIndex,
+		nameFromClass(i),
+	))
 }
 
 func nameFromClass(class int) string {
@@ -82,16 +97,10 @@ func PickClass(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iconHTML := renderIcon(db.Class(class), index)
-	tmpl, err := template.New("iconHTML").Parse(iconHTML)
+	_, err = w.Write([]byte(iconHTML))
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "bad render", http.StatusBadRequest)
-		return
-	}
-	err = tmpl.Execute(w, nil)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "bad render", http.StatusBadRequest)
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
 		return
 	}
 }
@@ -129,7 +138,6 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	}
 	user.TeamSize += 1
 
-	// We must parse team and picker to have the context for picker
 	tmpl, err := template.New("class-picker").
 		Funcs(funcsTeam).
 		ParseFiles("templates/team.html")
@@ -139,7 +147,6 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Then we execute only the template picker
 	err = tmpl.ExecuteTemplate(w, "picker", userBox)
 	if err != nil {
 		fmt.Println(err)
