@@ -79,7 +79,9 @@
         hx-get="/card/toggle?card={{ $card.ID }}&box={{ $boxIndex }}" {{ if doneAt $boxes $boxIndex }} checked {{ end }}
         class="form-checkbox w-6 h-6 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-50 transition-colors duration-200" />
     </label>
-    {{ renderIcon (classAt $.Team $boxIndex) $boxIndex }}
+    <div id="icon-{{ $boxIndex }}">
+      {{ renderIcon (classAt $.Team $boxIndex) $boxIndex }}
+    </div>
 
     {{ end }}
   </div>

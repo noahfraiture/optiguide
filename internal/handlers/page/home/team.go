@@ -32,11 +32,10 @@ func renderIcon(class any, boxIndex int) template.HTML {
 	default:
 		return ""
 	}
-	return template.HTML(fmt.Sprintf(
-		`<div id="icon-%d">
+	return template.HTML(fmt.Sprintf(`
 		<img src="/static/images/%[2]s.avif" alt=%[2]s class="inline-block h-6 w-6 mr-2">
 		%[2]s
-		</div>`,
+		`,
 		boxIndex,
 		nameFromClass(i),
 	))
@@ -97,7 +96,12 @@ func PickClass(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iconHTML := renderIcon(db.Class(class), index)
-	_, err = w.Write([]byte(iconHTML))
+	tmpl := fmt.Sprintf(
+		`<div hx-swap-oob="true" id="icon-%[1]d">%[2]s</div>`,
+		index,
+		iconHTML,
+	)
+	_, err = w.Write([]byte(tmpl))
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to write response", http.StatusInternalServerError)
