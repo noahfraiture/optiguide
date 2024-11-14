@@ -1,0 +1,10 @@
+{{ define "swap" }}
+{{ range $cardID := iterate .MaxCardID }}
+<div hx-swap-oob="beforeend:#character-boxes-{{ $cardID }}" id="character-box-{{ $.BoxIndex }}">
+  {{ block "box" (map "CardID" $cardID "Team" $.Team "BoxIndex" $.BoxIndex "Done" (doneAt (boxAt $.Boxes $cardID) $.BoxIndex)) }}{{ end }}
+</div>
+{{ end }}
+
+{{ block "picker" (map "BoxIndex" .BoxIndex "Class" (classAt .Team .BoxIndex)) }}{{ end }}
+
+{{ end }}

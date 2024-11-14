@@ -109,6 +109,13 @@ func PickClass(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type PlusData struct {
+	MaxCardID int
+	Team      []db.TeamBox
+	Boxes     map[int]db.BoxesState
+	BoxIndex  int
+}
+
 func Plus(w http.ResponseWriter, r *http.Request) {
 	dbPool, err := db.GetPool()
 	if err != nil {
@@ -134,28 +141,37 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user plus", http.StatusBadRequest)
 		return
 	}
+
 	team, err := db.GetClasses(dbPool, user.ID)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "user plus", http.StatusBadRequest)
 		return
 	}
+
 	user.TeamSize += 1
+	boxes, err := db.GetRenderBoxByCards(dbPool, user.ID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "boxes", http.StatusBadRequest)
+		return
+	}
 
 	tmpl, err := template.
-		New("home.html").
+		New("box-swap.html").
 		Funcs(funcsHome).
-		ParseFiles("templates/home.html", "templates/card.html", "templates/team.html")
+		ParseFiles("templates/team.html", "templates/card.html", "templates/box-swap.html")
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "template parsing error", http.StatusInternalServerError)
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "body", HomeData{
-		Team:     team,
-		LoggedIn: true,
-		CardData: CardData{Page: -1},
+	err = tmpl.ExecuteTemplate(w, "swap", PlusData{
+		MaxCardID: 10,
+		Team:      team,
+		Boxes:     boxes,
+		BoxIndex:  user.TeamSize - 1,
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -192,7 +208,7 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.TeamSize -= 1
-	tmpl := fmt.Sprintf(`<div hx-swap-oob="delete" id="character-picker-%d"></div>`, user.TeamSize)
+	tmpl := fmt.Sprintf(`<div hx-swap-oob="delete" id="character-box-%d"></div>`, user.TeamSize)
 	_, err = w.Write([]byte(tmpl))
 	if err != nil {
 		fmt.Println(err)
