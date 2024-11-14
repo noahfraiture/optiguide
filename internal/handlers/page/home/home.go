@@ -11,8 +11,9 @@ import (
 )
 
 type HomeData struct {
-	Team     []db.UserBox
+	Team     []db.TeamBox
 	LoggedIn bool
+	CardData CardData // Data for the first card to be display
 }
 
 var funcsHome = template.FuncMap{
@@ -36,7 +37,7 @@ var funcsHome = template.FuncMap{
 		}
 		return false
 	},
-	"classAt": func(boxes []db.UserBox, boxIndex int) db.Class {
+	"classAt": func(boxes []db.TeamBox, boxIndex int) db.Class {
 		for _, box := range boxes {
 			if box.BoxIndex == boxIndex {
 				return box.Class
@@ -58,7 +59,13 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.
 		New("base.html").
 		Funcs(funcs).
-		ParseFiles("templates/base.html", "templates/topbar.html", "templates/home.html", "templates/team.html")
+		ParseFiles(
+			"templates/base.html",
+			"templates/topbar.html",
+			"templates/home.html",
+			"templates/team.html",
+			"templates/card.html",
+		)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
@@ -72,7 +79,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := HomeData{}
+	// We use empty cards and page=-1 to display nothing but the loader of the first page
+	data := HomeData{CardData: CardData{
+		Page: -1,
+	}}
 
 	userAuth, err := auth.GetUser(r)
 	if err != nil {

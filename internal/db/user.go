@@ -115,7 +115,7 @@ var ClassToName = map[Class]string{
 	FORGELANCE: "FORGELANCE",
 }
 
-type UserBox struct {
+type TeamBox struct {
 	userID   string
 	BoxIndex int
 	Class    Class
@@ -145,7 +145,7 @@ func UpdateClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) err
 	return err
 }
 
-func InsertClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) (UserBox, error) {
+func InsertClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) (TeamBox, error) {
 	query :=
 		`WITH inputs(user_id, box_index, class) AS (
 	        VALUES (@user_id::text, @box_index::integer, @class::integer)
@@ -161,18 +161,18 @@ func InsertClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) (Us
 		)
 		SELECT class, box_index FROM ins UNION SELECT class, box_index FROM existing;`
 
-	userBox := UserBox{userID: userID}
+	teamBox := TeamBox{userID: userID}
 
 	row := db.QueryRow(context.Background(), query, pgx.NamedArgs{
 		"user_id":   userID,
 		"box_index": boxIndex,
 		"class":     class,
 	})
-	err := row.Scan(&userBox.Class, &userBox.BoxIndex)
-	return userBox, err
+	err := row.Scan(&teamBox.Class, &teamBox.BoxIndex)
+	return teamBox, err
 }
 
-func GetClasses(db *pgxpool.Pool, userID string) ([]UserBox, error) {
+func GetClasses(db *pgxpool.Pool, userID string) ([]TeamBox, error) {
 	query :=
 		`SELECT user_id, box_index, class
 		FROM user_box
@@ -185,9 +185,9 @@ func GetClasses(db *pgxpool.Pool, userID string) ([]UserBox, error) {
 		return nil, err
 	}
 
-	boxes := make([]UserBox, 0)
+	boxes := make([]TeamBox, 0)
 	for rows.Next() {
-		box := UserBox{}
+		box := TeamBox{}
 		err := rows.Scan(&box.userID, &box.BoxIndex, &box.Class)
 		if err != nil {
 			return nil, err
@@ -200,7 +200,7 @@ func GetClasses(db *pgxpool.Pool, userID string) ([]UserBox, error) {
 // Not a table in the database but used for the html render
 type BoxesState map[int]bool // Box state by index
 
-// Merge between Progress and UserBox
+// Merge between Progress and TeamBox
 func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, error) {
 	// We can't make a LEFT JOIN to have `done` as false for a default value
 	// Because we can't know `card_id`
