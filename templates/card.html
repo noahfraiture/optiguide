@@ -74,7 +74,7 @@
     {{ $boxes := index $.BoxesState $card.ID }}
 
     {{ range $boxIndex := iterate $.Size }}
-    <label
+    <label id="character-{{ $boxIndex }}"
       class="flex items-center space-x-2 cursor-pointer bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200 transition duration-200">
       <input type="checkbox" hx-swap="none" hx-trigger="change"
         hx-get="/card/toggle?card={{ $card.ID }}&box={{ $boxIndex }}"

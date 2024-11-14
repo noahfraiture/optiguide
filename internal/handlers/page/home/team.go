@@ -189,4 +189,11 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 	}
 	user.TeamSize -= 1
 	w.WriteHeader(http.StatusOK)
+	tmpl := fmt.Sprintf(`<div hx-swap-oob="true" id="character-%d"></div>`, user.TeamSize)
+	_, err = w.Write([]byte(tmpl))
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
