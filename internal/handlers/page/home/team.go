@@ -97,7 +97,7 @@ func PickClass(w http.ResponseWriter, r *http.Request) {
 
 	iconHTML := renderIcon(db.Class(class), index)
 	tmpl := fmt.Sprintf(
-		`<div hx-swap-oob="true" id="icon-%[1]d">%[2]s</div>`,
+		`<div hx-swap-oob="outerHTML" id="icon-%[1]d">%[2]s</div>`,
 		index,
 		iconHTML,
 	)
@@ -189,7 +189,7 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 	}
 	user.TeamSize -= 1
 	w.WriteHeader(http.StatusOK)
-	tmpl := fmt.Sprintf(`<div hx-swap-oob="true" id="character-%d"></div>`, user.TeamSize)
+	tmpl := fmt.Sprintf(`<div hx-swap-oob="outerHTML" id="character-picker-%d"></div>`, user.TeamSize)
 	_, err = w.Write([]byte(tmpl))
 	if err != nil {
 		fmt.Println(err)

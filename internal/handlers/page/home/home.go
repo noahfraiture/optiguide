@@ -46,6 +46,15 @@ var funcsHome = template.FuncMap{
 		return db.NONE
 	},
 	"renderIcon": renderIcon,
+	"map": func(args ...any) map[string]any {
+		dict := make(map[string]any)
+		for i := range len(args) / 2 {
+			if v, ok := args[i*2].(string); ok {
+				dict[v] = args[i*2+1]
+			}
+		}
+		return dict
+	},
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
