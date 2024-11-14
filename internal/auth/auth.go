@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -31,6 +30,4 @@ func Init() {
 	// Configure the session store with the session secret
 	store := sessions.NewCookieStore([]byte(sessionSecret))
 	gothic.Store = store
-
-	fmt.Println("Google OAuth initialized with session secret")
 }

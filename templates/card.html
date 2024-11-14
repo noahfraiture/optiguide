@@ -70,12 +70,12 @@
     <h3 class="font-semibold text-gray-700">Achèvement:</h3>
   </div>
   <div id="character-boxes" class="flex flex-wrap gap-4">
-    {{ $card := .Card }}
-    {{ $boxes := index $.BoxesState $card.ID }}
+    {{ $card := .Card.ID }}
+    {{ $boxes := index $.BoxesState .Card.ID }}
     {{ $team := $.Team }}
 
     {{ range $boxIndex := iterate $.Size }}
-    {{ block "box" (map "Card" $card "Boxes" $boxes "Team" $team "BoxIndex" $boxIndex) }}{{ end }}
+    {{ block "box" (map "CardID" $card "Team" $.Team "BoxIndex" $boxIndex "Done" (doneAt $boxes $boxIndex) ) }}{{ end }}
     {{ end }}
   </div>
 </div>
@@ -90,9 +90,9 @@
 <label id="character-picker-{{ .BoxIndex }}"
   class="flex items-center space-x-2 cursor-pointer bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200 transition duration-200">
   <input type="checkbox" hx-swap="none" hx-trigger="change"
-    hx-get="/card/toggle?card={{ .Card.ID }}&box={{ .BoxIndex }}"
+    hx-get="/card/toggle?card={{ .CardID }}&box={{ .BoxIndex }}"
     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-    {{ if doneAt .Boxes .BoxIndex }} checked {{ end }} />
+    {{ if .Done }} checked {{ end }} />
   <div id="icon-{{ .BoxIndex }}">
     {{ renderIcon (classAt .Team .BoxIndex) .BoxIndex }}
   </div>
