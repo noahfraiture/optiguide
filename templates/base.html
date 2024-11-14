@@ -12,7 +12,9 @@
 <body>
   {{ template "topbar.html" . }}
 
-  {{ block "body" . }}{{ end }}
+  <div id="body">
+    {{ block "body" . }}{{ end }}
+  </div>
 </body>
 
 </html>
