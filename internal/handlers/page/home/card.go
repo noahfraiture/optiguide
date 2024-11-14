@@ -12,7 +12,7 @@ import (
 
 type CardData struct {
 	Cards      []db.Card
-	Team       []db.UserBox
+	Team       []db.TeamBox
 	BoxesState map[int]db.BoxesState
 	Page       int
 	Size       int
@@ -94,7 +94,7 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 		return
 	}
 
-	err = tmpl.Execute(w, CardData{
+	err = tmpl.ExecuteTemplate(w, "cards", CardData{
 		Cards:      cards,
 		Team:       team,
 		BoxesState: boxes,

@@ -130,7 +130,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user plus", http.StatusBadRequest)
 		return
 	}
-	userBox, err := db.InsertClass(dbPool, user.ID, user.TeamSize, db.NONE)
+	teamBox, err := db.InsertClass(dbPool, user.ID, user.TeamSize, db.NONE)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "set class plus", http.StatusBadRequest)
@@ -138,7 +138,8 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	}
 	user.TeamSize += 1
 
-	tmpl, err := template.New("class-picker").
+	tmpl, err := template.
+		New("team.html").
 		Funcs(funcsTeam).
 		ParseFiles("templates/team.html")
 	if err != nil {
@@ -147,7 +148,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "picker", userBox)
+	err = tmpl.ExecuteTemplate(w, "picker", teamBox)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "template execution error", http.StatusInternalServerError)
