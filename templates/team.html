@@ -5,14 +5,14 @@
       class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
       -
     </button>
-    <button hx-post="/card/plus" hx-trigger="click" hx-swap="innerHTML" hx-target="#body"
+    <button hx-post="/card/plus" hx-trigger="click" hx-swap="beforeend" hx-target="#pickers"
       class="px-4 py-2 bg-green-600 text-white rounded ml-2 hover:bg-green-700 transition">
       +
     </button>
   </div>
 </div>
 
-<div class="flex space-x-4 mb-4">
+<div id="pickers" class="flex space-x-4 mb-4">
   <!-- Class picker for every character of the team -->
   {{ range .Team }}
   <!-- picker in a separated file to be able to add one with button plus -->
@@ -24,7 +24,7 @@
 
 {{ define "picker" }}
 
-<div class="relative inline-block text-left dropdown" id="character-picker-{{ .BoxIndex }}">
+<div class="relative inline-block text-left dropdown" id="character-box-{{ .BoxIndex }}">
   <button type="button"
     class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
     <!-- Icon of the character picked and its name -->

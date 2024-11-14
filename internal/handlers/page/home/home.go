@@ -43,7 +43,13 @@ var funcsHome = template.FuncMap{
 				return box.Class
 			}
 		}
-		return db.NONE
+		return db.TOUS
+	},
+	"boxAt": func(boxes map[int]db.BoxesState, cardID int) db.BoxesState {
+		if box, ok := boxes[cardID]; ok {
+			return box
+		}
+		return db.BoxesState{}
 	},
 	"renderIcon": renderIcon,
 	"map": func(args ...any) map[string]any {

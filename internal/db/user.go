@@ -38,7 +38,7 @@ func InsertUser(db *pgxpool.Pool, user User) error {
 	if err != nil {
 		return err
 	}
-	_, err = InsertClass(db, user.ID, 0, NONE)
+	_, err = InsertClass(db, user.ID, 0, TOUS)
 	return err
 }
 
@@ -68,7 +68,7 @@ func PlusTeamSize(db *pgxpool.Pool, userID string, value int) error {
 type Class int
 
 const (
-	NONE Class = iota
+	TOUS Class = iota
 	ECAFLIP
 	ENIRIPSA
 	IOP
@@ -93,7 +93,7 @@ const (
 )
 
 var ClassToName = map[Class]string{
-	NONE:       "NONE",
+	TOUS:       "TOUS",
 	ECAFLIP:    "ECAFLIP",
 	ENIRIPSA:   "ENIRIPSA",
 	IOP:        "IOP",
@@ -198,7 +198,8 @@ func GetClasses(db *pgxpool.Pool, userID string) ([]TeamBox, error) {
 }
 
 // Not a table in the database but used for the html render
-type BoxesState map[int]bool // Box state by index
+// Box state by index of the box
+type BoxesState map[int]bool
 
 // Merge between Progress and TeamBox
 func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, error) {

@@ -69,7 +69,7 @@
   <div class="mb-4">
     <h3 class="font-semibold text-gray-700">Achèvement:</h3>
   </div>
-  <div id="character-boxes" class="flex flex-wrap gap-4">
+  <div id="character-boxes-{{ .Card.ID }}" class="flex flex-wrap gap-4">
     {{ $card := .Card.ID }}
     {{ $boxes := index $.BoxesState .Card.ID }}
     {{ $team := $.Team }}
@@ -87,7 +87,7 @@
 
 {{ define "box" }}
 
-<label id="character-picker-{{ .BoxIndex }}"
+<div id="character-box-{{ .BoxIndex }}"
   class="flex items-center space-x-2 cursor-pointer bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200 transition duration-200">
   <input type="checkbox" hx-swap="none" hx-trigger="change"
     hx-get="/card/toggle?card={{ .CardID }}&box={{ .BoxIndex }}"
@@ -96,6 +96,6 @@
   <div id="icon-{{ .BoxIndex }}">
     {{ renderIcon (classAt .Team .BoxIndex) .BoxIndex }}
   </div>
-</label>
+</div>
 
 {{ end }}
