@@ -40,7 +40,8 @@ func SaveUser(dbpool *pgxpool.Pool, user goth.User, w http.ResponseWriter, r *ht
 	if err != nil {
 		return err
 	}
-	return db.InsertUser(dbpool, db.User{ID: user.UserID, Email: user.Email})
+	userDB := db.User{ID: user.UserID, Email: user.Email}
+	return db.SetUser(dbpool, &userDB)
 }
 
 func ClearSession(w http.ResponseWriter, r *http.Request) error {

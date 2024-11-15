@@ -46,7 +46,8 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	user, err := db.QueryUser(dbPool, userSesssion.UserID)
+	user := db.User{ID: userSesssion.UserID}
+	err = db.SetUser(dbPool, &user)
 	if err != nil {
 		msg := fmt.Sprintf("Card not found: %d", page)
 		fmt.Println(msg)
