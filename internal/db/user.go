@@ -29,17 +29,21 @@ func tableUser(db *pgxpool.Pool) error {
 func SetUser(db *pgxpool.Pool, user *User) error {
 	query := `WITH inputs(id, email, team_size) AS (
 		VALUES (@id::text, @email::text, 1::integer)
-	), ins AS (
+	), ins_user AS (
 		INSERT INTO users(id, email, team_size)
 		SELECT * FROM inputs
 		ON CONFLICT (id) DO NOTHING
 		RETURNING id, email, team_size
+	), ins_team AS (
+		INSERT INTO user_box(user_id, box_index, class)
+		SELECT id, 0, 0 FROM ins_user
+		ON CONFLICT (user_id, box_index) DO NOTHING
 	), existing AS (
 		SELECT id, email, team_size
 		FROM users
 		WHERE id = @id
 	)
-	SELECT id, email, team_size FROM ins UNION SELECT id, email, team_size FROM existing;`
+	SELECT id, email, team_size FROM ins_user UNION SELECT id, email, team_size FROM existing;`
 
 	args := pgx.NamedArgs{"id": user.ID, "email": user.Email}
 	row := db.QueryRow(context.Background(), query, args)
@@ -131,8 +135,11 @@ func tableUserClass(db *pgxpool.Pool) error {
 
 func UpdateClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) error {
 
-	query := `UPDATE user_box SET class = @class
-		WHERE user_id = @user_id AND box_index = @box_index;`
+	query :=
+		`INSERT INTO user_box(user_id, box_index, class)
+		VALUES (@user_id, @box_index, @class)
+		ON CONFLICT (user_id, box_index)
+		DO UPDATE SET class = @class`
 	_, err := db.Exec(context.Background(), query, pgx.NamedArgs{
 		"user_id":   userID,
 		"box_index": boxIndex,
@@ -201,11 +208,10 @@ type BoxesState map[int]bool
 func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, error) {
 	// We can't make a LEFT JOIN to have `done` as false for a default value
 	// Because we can't know `card_id`
-	query := `SELECT
-		progress.card_id, user_box.box_index, progress.done
-		FROM user_box
-		JOIN progress on progress.box_index = user_box.box_index
-		WHERE user_box.user_id = @user_id;`
+	query :=
+		`SELECT card_id, box_index, done
+		FROM progress
+		WHERE user_id = @user_id;`
 	args := pgx.NamedArgs{
 		"user_id": userID,
 	}

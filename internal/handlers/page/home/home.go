@@ -12,6 +12,7 @@ import (
 
 type HomeData struct {
 	Team     []db.TeamBox
+	TeamSize int
 	LoggedIn bool
 	CardData CardData // Data for the first card to be display
 }
@@ -94,21 +95,23 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// We use empty cards and page=-1 to display nothing but the loader of the first page
-	data := HomeData{CardData: CardData{
-		Page: -1,
-	}}
-
 	userAuth, err := auth.GetUser(r)
-	if err != nil {
-		fmt.Println(err)
-		data.LoggedIn = false
-	} else {
-		data.LoggedIn = true
-		data.Team, err = db.GetClasses(dbPool, userAuth.UserID)
+	loggedIn := err == nil
+	team := []db.TeamBox{}
+	user := db.User{}
+	if loggedIn {
+		user.ID = userAuth.UserID
+		err = db.SetUser(dbPool, &user)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Can't get boxes", http.StatusInternalServerError)
+			return
+		}
+
+		team, err = db.GetClasses(dbPool, user.ID)
 		sort.Slice(
-			data.Team,
-			func(i, j int) bool { return data.Team[i].BoxIndex < data.Team[j].BoxIndex },
+			team,
+			func(i, j int) bool { return team[i].BoxIndex < team[j].BoxIndex },
 		)
 		if err != nil {
 			fmt.Println(err)
@@ -116,7 +119,16 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := tmpl.ExecuteTemplate(w, "base.html", data); err != nil {
+	err = tmpl.ExecuteTemplate(w, "base.html",
+		HomeData{
+			// We use empty cards and page=-1 to display nothing but the loader of the first page
+			CardData: CardData{Page: -1},
+			Team:     team,
+			TeamSize: user.TeamSize,
+			LoggedIn: loggedIn,
+		},
+	)
+	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Error executing template", http.StatusInternalServerError)
 		return
