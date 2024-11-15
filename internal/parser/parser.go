@@ -13,6 +13,7 @@ type Card struct {
 	ID           int
 	Level        int
 	Info         string
+	TaskMerge    bool
 	TaskOne      string
 	TaskTwo      string
 	Achievements string
@@ -97,8 +98,9 @@ func Parse(fileName string) ([]Card, error) {
 			ID:           step_number,
 			Level:        level,
 			Info:         info,
-			TaskOne:      row.Cells[6].Value,
-			TaskTwo:      row.Cells[8].Value,
+			TaskMerge:    row.Cells[6].HMerge == 2,
+			TaskOne:      strings.Trim(row.Cells[6].Value, " ↓\n"),
+			TaskTwo:      strings.Trim(row.Cells[8].Value, " ↓\n"),
 			Achievements: strings.Trim(row.Cells[10].Value, " \n\t\r-"),
 			DungeonOne:   strings.Trim(row.Cells[12].Value, " \n\t\r-"),
 			DungeonTwo:   strings.Trim(row.Cells[14].Value, " \n\t\r-"),
