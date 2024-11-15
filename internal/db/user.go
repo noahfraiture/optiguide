@@ -25,30 +25,26 @@ func tableUser(db *pgxpool.Pool) error {
 	return err
 }
 
-func InsertUser(db *pgxpool.Pool, user User) error {
-	query :=
-		`INSERT INTO users(id, email, team_size)
-		VALUES (@id, @email, 1)
-		ON CONFLICT (id) DO NOTHING;`
-	args := pgx.NamedArgs{
-		"id":    user.ID,
-		"email": user.Email,
-	}
-	_, err := db.Exec(context.Background(), query, args)
-	if err != nil {
-		return err
-	}
-	_, err = InsertClass(db, user.ID, 0, TOUS)
-	return err
-}
+// NOTE : insert the user and set its email and team_size
+func SetUser(db *pgxpool.Pool, user *User) error {
+	query := `WITH inputs(id, email, team_size) AS (
+		VALUES (@id::text, @email::text, 1::integer)
+	), ins AS (
+		INSERT INTO users(id, email, team_size)
+		SELECT * FROM inputs
+		ON CONFLICT (id) DO NOTHING
+		RETURNING id, email, team_size
+	), existing AS (
+		SELECT id, email, team_size
+		FROM users
+		WHERE id = @id
+	)
+	SELECT id, email, team_size FROM ins UNION SELECT id, email, team_size FROM existing;`
 
-func QueryUser(db *pgxpool.Pool, id string) (User, error) {
-	query := `SELECT id, email, team_size FROM users WHERE id = @id;`
-	args := pgx.NamedArgs{"id": id}
+	args := pgx.NamedArgs{"id": user.ID, "email": user.Email}
 	row := db.QueryRow(context.Background(), query, args)
-	user := User{}
 	err := row.Scan(&user.ID, &user.Email, &user.TeamSize)
-	return user, err
+	return err
 }
 
 func PlusTeamSize(db *pgxpool.Pool, userID string, value int) error {

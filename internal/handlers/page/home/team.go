@@ -129,7 +129,8 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	user, err := db.QueryUser(dbPool, userSesssion.UserID)
+	user := db.User{ID: userSesssion.UserID}
+	err = db.SetUser(dbPool, &user)
 	if err != nil {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return
@@ -193,7 +194,8 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	user, err := db.QueryUser(dbPool, userSesssion.UserID)
+	user := db.User{ID: userSesssion.UserID}
+	err = db.SetUser(dbPool, &user)
 	if err != nil {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return
