@@ -22,7 +22,7 @@ var funcsTeam = template.FuncMap{
 	},
 }
 
-func renderIcon(class any, boxIndex int) template.HTML {
+func renderIcon(class any) template.HTML {
 	var i int
 	switch v := class.(type) {
 	case int:
@@ -33,10 +33,9 @@ func renderIcon(class any, boxIndex int) template.HTML {
 		return ""
 	}
 	return template.HTML(fmt.Sprintf(`
-		<img src="/static/images/%[2]s.avif" alt=%[2]s class="inline-block h-6 w-6 mr-2">
-		%[2]s
+		<img src="/static/images/%[1]s.avif" alt=%[1]s class="inline-block h-6 w-6 mr-2">
+		%[1]s
 		`,
-		boxIndex,
 		nameFromClass(i),
 	))
 }
@@ -95,7 +94,7 @@ func PickClass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	iconHTML := renderIcon(db.Class(class), index)
+	iconHTML := renderIcon(db.Class(class))
 	tmpl := fmt.Sprintf(
 		`<div hx-swap-oob="outerHTML" id="icon-%[1]d">%[2]s</div>`,
 		index,

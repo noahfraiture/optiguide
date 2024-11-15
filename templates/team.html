@@ -14,9 +14,10 @@
 
 <div id="pickers" class="flex space-x-4 mb-4">
   <!-- Class picker for every character of the team -->
-  {{ range .Team }}
+  {{ $team := .Team }}
+  {{ range $i := iterate .TeamSize }}
   <!-- picker in a separated file to be able to add one with button plus -->
-  {{ block "picker" . }}{{ end }}
+  {{ block "picker" (map "BoxIndex" $i "Class" (classAt $team $i)) }}{{ end }}
 
   {{ end }}
 </div>
@@ -29,7 +30,7 @@
     class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
     <!-- Icon of the character picked and its name -->
     <div id="icon-{{ .BoxIndex }}">
-      {{ renderIcon .Class .BoxIndex }}
+      {{ renderIcon .Class }}
     </div>
 
     <!-- Arrow -->
@@ -49,7 +50,7 @@
       {{ range $i := iterate nbClass }}
       <a hx-trigger="click" hx-swap="none" hx-post="/pick-class?class={{ $i }}&index={{ $index }}"
         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 items-center cursor-pointer">
-        {{ renderIcon $i $index }}
+        {{ renderIcon $i }}
       </a>
       {{ end }}
     </div>

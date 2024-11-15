@@ -71,12 +71,11 @@
     <h3 class="font-semibold text-gray-700">Achèvement:</h3>
   </div>
   <div id="character-boxes-{{ .Card.ID }}" class="flex flex-wrap gap-4">
-    {{ $card := .Card.ID }}
-    {{ $boxes := index $.BoxesState .Card.ID }}
-    {{ $team := $.Team }}
+    {{ $cardID := .Card.ID }}
+    {{ $boxState := boxAt $.BoxesState .Card.ID }}
 
     {{ range $boxIndex := iterate $.Size }}
-    {{ block "box" (map "CardID" $card "Team" $.Team "BoxIndex" $boxIndex "Done" (doneAt $boxes $boxIndex) ) }}{{ end }}
+    {{ block "box" (map "CardID" $cardID "BoxIndex" $boxIndex "Done" (doneAt $boxState $boxIndex) "Class" (classAt $.Team $boxIndex)) }}{{ end }}
     {{ end }}
   </div>
 </div>
@@ -94,7 +93,7 @@
     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
     {{ if .Done }} checked {{ end }} />
   <div id="icon-{{ .BoxIndex }}">
-    {{ renderIcon (classAt .Team .BoxIndex) .BoxIndex }}
+    {{ renderIcon .Class }}
   </div>
 </div>
 
