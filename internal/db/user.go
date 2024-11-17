@@ -25,6 +25,12 @@ func tableUser(db *pgxpool.Pool) error {
 	return err
 }
 
+func GetUser(db *pgxpool.Pool, userID string) (User, error) {
+	user := User{ID: userID}
+	err := SetUser(dbPool, &user)
+	return user, err
+}
+
 // NOTE : insert the user and set its email and team_size
 func SetUser(db *pgxpool.Pool, user *User) error {
 	query := `WITH inputs(id, email, team_size) AS (
@@ -35,8 +41,8 @@ func SetUser(db *pgxpool.Pool, user *User) error {
 		ON CONFLICT (id) DO NOTHING
 		RETURNING id, email, team_size
 	), ins_team AS (
-		INSERT INTO user_box(user_id, box_index, class)
-		SELECT id, 0, 0 FROM ins_user
+		INSERT INTO user_characters(user_id, box_index, class, name)
+		SELECT id, 0, @class, @name FROM ins_user
 		ON CONFLICT (user_id, box_index) DO NOTHING
 	), existing AS (
 		SELECT id, email, team_size
@@ -45,7 +51,7 @@ func SetUser(db *pgxpool.Pool, user *User) error {
 	)
 	SELECT id, email, team_size FROM ins_user UNION SELECT id, email, team_size FROM existing;`
 
-	args := pgx.NamedArgs{"id": user.ID, "email": user.Email}
+	args := pgx.NamedArgs{"id": user.ID, "email": user.Email, "class": NONE, "name": "Perso 1"}
 	row := db.QueryRow(context.Background(), query, args)
 	err := row.Scan(&user.ID, &user.Email, &user.TeamSize)
 	return err
@@ -68,7 +74,7 @@ func PlusTeamSize(db *pgxpool.Pool, userID string, value int) error {
 type Class int
 
 const (
-	TOUS Class = iota
+	NONE Class = iota
 	ECAFLIP
 	ENIRIPSA
 	IOP
@@ -93,7 +99,7 @@ const (
 )
 
 var ClassToName = map[Class]string{
-	TOUS:       "TOUS",
+	NONE:       "TOUS",
 	ECAFLIP:    "ECAFLIP",
 	ENIRIPSA:   "ENIRIPSA",
 	IOP:        "IOP",
@@ -115,70 +121,62 @@ var ClassToName = map[Class]string{
 	FORGELANCE: "FORGELANCE",
 }
 
-type TeamBox struct {
+type Character struct {
 	userID   string
 	BoxIndex int
 	Class    Class
+	Name     string
 }
 
-func tableUserClass(db *pgxpool.Pool) error {
+func tableUserTeam(db *pgxpool.Pool) error {
 	_, err := db.Exec(context.Background(),
-		`CREATE TABLE IF NOT EXISTS user_box(
+		`CREATE TABLE IF NOT EXISTS user_characters(
 			user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
 			box_index INTEGER NOT NULL,
 			class INTEGER NOT NULL,
+			name TEXT NOT NULL,
 			PRIMARY KEY(user_id, box_index)
 		);`,
 	)
 	return err
 }
 
-func UpdateClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) error {
-
+// Update the character class, and if first time update, set the name to the name of the class
+func UpdateCharacterClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) error {
 	query :=
-		`INSERT INTO user_box(user_id, box_index, class)
-		VALUES (@user_id, @box_index, @class)
+		`INSERT INTO user_characters(user_id, box_index, class, name)
+		VALUES (@user_id, @box_index, @class, @name)
 		ON CONFLICT (user_id, box_index)
 		DO UPDATE SET class = @class`
 	_, err := db.Exec(context.Background(), query, pgx.NamedArgs{
 		"user_id":   userID,
 		"box_index": boxIndex,
 		"class":     class,
+		"name":      ClassToName[class],
 	})
 	return err
 }
 
-func InsertClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) (TeamBox, error) {
+// Update the character class, and if first time update, set the class to NONE which is the current displayed
+func UpdateCharacterName(db *pgxpool.Pool, userID string, boxIndex int, name string) error {
 	query :=
-		`WITH inputs(user_id, box_index, class) AS (
-	        VALUES (@user_id::text, @box_index::integer, @class::integer)
-	    ), ins AS (
-	    	INSERT INTO user_box (user_id, box_index, class)
-	    	SELECT * FROM inputs
-	    	ON CONFLICT (user_id, box_index) DO NOTHING
-	    	RETURNING class, box_index
-		), existing AS (
-			SELECT class, box_index
-			FROM user_box
-			WHERE user_id = @user_id AND box_index = @box_index
-		)
-		SELECT class, box_index FROM ins UNION SELECT class, box_index FROM existing;`
-
-	teamBox := TeamBox{userID: userID}
-
-	row := db.QueryRow(context.Background(), query, pgx.NamedArgs{
+		`INSERT INTO user_characters(user_id, box_index, class, name)
+		VALUES (@user_id, @box_index, @class, @name)
+		ON CONFLICT (user_id, box_index)
+		DO UPDATE SET name = @name`
+	_, err := db.Exec(context.Background(), query, pgx.NamedArgs{
 		"user_id":   userID,
 		"box_index": boxIndex,
-		"class":     class,
+		"class":     NONE,
+		"name":      name,
 	})
-	err := row.Scan(&teamBox.Class, &teamBox.BoxIndex)
-	return teamBox, err
+	return err
 }
 
-func GetClasses(db *pgxpool.Pool, userID string) ([]TeamBox, error) {
+func GetTeam(db *pgxpool.Pool, userID string) ([]Character, error) {
 	query :=
-		`SELECT user_id, box_index, class
-		FROM user_box
+		`SELECT user_id, box_index, class, name
+		FROM user_characters
 		JOIN users ON id = user_id
 		WHERE user_id = @user_id AND box_index < team_size
 		ORDER BY box_index;`
@@ -188,10 +186,10 @@ func GetClasses(db *pgxpool.Pool, userID string) ([]TeamBox, error) {
 		return nil, err
 	}
 
-	boxes := make([]TeamBox, 0)
+	boxes := make([]Character, 0)
 	for rows.Next() {
-		box := TeamBox{}
-		err := rows.Scan(&box.userID, &box.BoxIndex, &box.Class)
+		box := Character{}
+		err := rows.Scan(&box.userID, &box.BoxIndex, &box.Class, &box.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -204,7 +202,10 @@ func GetClasses(db *pgxpool.Pool, userID string) ([]TeamBox, error) {
 // Box state by index of the box
 type BoxesState map[int]bool
 
-// Merge between Progress and TeamBox
+// Merge between Progress and TeamBox to get the state (done/!done) for
+// each box of each card BoxesState is map[boxIndex]isDone := map[int]bool
+// We only need the done status of a box because we only need the class &
+// name once, when we get the whole team
 func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, error) {
 	// We can't make a LEFT JOIN to have `done` as false for a default value
 	// Because we can't know `card_id`

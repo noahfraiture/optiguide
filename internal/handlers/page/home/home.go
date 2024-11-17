@@ -11,7 +11,7 @@ import (
 )
 
 type HomeData struct {
-	Team     []db.TeamBox
+	Team     []db.Character
 	TeamSize int
 	LoggedIn bool
 	CardData CardData // Data for the first card to be display
@@ -32,21 +32,24 @@ var funcsHome = template.FuncMap{
 		return r
 	},
 	// Functions instead of `index . .` in html template, help to provide default value
-	"doneAt": func(boxes db.BoxesState, boxIndex int) bool {
+	"doneAtIndex": func(boxes db.BoxesState, boxIndex int) bool {
 		if box, ok := boxes[boxIndex]; ok {
 			return box
 		}
 		return false
 	},
-	"classAt": func(boxes []db.TeamBox, boxIndex int) db.Class {
+	"characterAtIndex": func(boxes []db.Character, boxIndex int) db.Character {
 		for _, box := range boxes {
 			if box.BoxIndex == boxIndex {
-				return box.Class
+				return box
 			}
 		}
-		return db.TOUS
+		return db.Character{
+			Class: db.NONE,
+			Name:  fmt.Sprintf("Perso %d", boxIndex+1),
+		}
 	},
-	"boxAt": func(boxes map[int]db.BoxesState, cardID int) db.BoxesState {
+	"boxAtCard": func(boxes map[int]db.BoxesState, cardID int) db.BoxesState {
 		if box, ok := boxes[cardID]; ok {
 			return box
 		}
@@ -97,7 +100,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	userAuth, err := auth.GetUser(r)
 	loggedIn := err == nil
-	team := []db.TeamBox{}
+	team := []db.Character{}
 	user := db.User{}
 	if loggedIn {
 		user.ID = userAuth.UserID
@@ -108,7 +111,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		team, err = db.GetClasses(dbPool, user.ID)
+		team, err = db.GetTeam(dbPool, user.ID)
 		sort.Slice(
 			team,
 			func(i, j int) bool { return team[i].BoxIndex < team[j].BoxIndex },

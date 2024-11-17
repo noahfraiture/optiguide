@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"optiguide/internal/auth"
 	"optiguide/internal/db"
-	"strconv"
+	"optiguide/internal/handlers"
 )
 
 var funcsTeam = template.FuncMap{
 	"renderIcon": renderIcon,
+	"renderName": renderName,
+	"className":  className,
 	"nbClass":    func() int { return int(db.NB_CLASS) },
 	"add":        func(i, j int) int { return i + j },
 	"iterate": func(max int) []int {
@@ -32,49 +34,104 @@ func renderIcon(class any) template.HTML {
 	default:
 		return ""
 	}
-	return template.HTML(fmt.Sprintf(`
-		<img src="/static/images/%[1]s.avif" alt=%[1]s class="inline-block h-6 w-6 mr-2">
-		%[1]s
-		`,
-		nameFromClass(i),
+	return template.HTML(fmt.Sprintf(`<img src="/static/images/%[1]s.avif" alt=%[1]s class="inline-block h-6 w-6 mr-2">`,
+		db.ClassToName[db.Class(i)],
 	))
 }
 
-func nameFromClass(class int) string {
-	return db.ClassToName[db.Class(class)]
+// Return a div containing the name. Click on it will make a request to get a
+// editable name ox
+func renderName(name string, index int) template.HTML {
+	return template.HTML(fmt.Sprintf(
+		`<div hx-post="/team/editable-name?name=%[1]s&index=%[2]d" hx-swap="outerHTML">%[1]s</div>`,
+		name,
+		index,
+	))
 }
 
-func PickClass(w http.ResponseWriter, r *http.Request) {
-
-	classStr := r.URL.Query().Get("class")
-	if classStr == "" {
-		msg := fmt.Sprintf("No class: %s", classStr)
-		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
-	class, err := strconv.Atoi(classStr)
+// FIX: the form is correctly parse and all, but the value that arrive
+// here is the original name and not the new one
+func SaveName(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	index, err := handlers.GetParameterInt(w, r, "index")
 	if err != nil {
-		msg := fmt.Sprintf("Invalid class value: %s", classStr)
-		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	indexStr := r.URL.Query().Get("index")
-	if indexStr == "" {
-		msg := fmt.Sprintf("No index: %s", indexStr)
-		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
-	index, err := strconv.Atoi(indexStr)
+	dbPool, err := db.GetPool()
 	if err != nil {
-		msg := fmt.Sprintf("Invalid index value: %s", indexStr)
-		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
+		fmt.Println(err)
+		http.Error(w, "can't get db", http.StatusBadRequest)
 		return
 	}
+	userAuth, err := auth.GetUser(r)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusBadRequest)
+		return
+	}
+	err = db.UpdateCharacterName(dbPool, userAuth.UserID, index, name)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't update char", http.StatusBadRequest)
+	}
+	nameHTML := renderName(name, index)
+	tmpl := fmt.Sprintf(
+		`<div hx-swap-oob="outerHTML" id="name-%[1]d">%[2]s</div>`,
+		index,
+		nameHTML,
+	)
+	_, err = w.Write([]byte(tmpl))
+	if err != nil {
+		http.Error(w, "failed to write response", http.StatusInternalServerError)
+	}
+}
 
+func renderEditableName(name string, index int) template.HTML {
+	return template.HTML(fmt.Sprintf(
+		`<input type="text" placeholder="%[1]s" name="name" hx-post="/team/save-name?index=%[2]d" hx-swap="outerHTML"/>`,
+		name,
+		index,
+	))
+}
+
+func RenderEditableName(w http.ResponseWriter, r *http.Request) {
+	name, err := handlers.GetParameterString(w, r, "name")
+	if err != nil {
+		return
+	}
+	index, err := handlers.GetParameterInt(w, r, "index")
+	if err != nil {
+		return
+	}
+	tmpl := renderEditableName(name, index)
+	_, err = w.Write([]byte(tmpl))
+	if err != nil {
+		http.Error(w, "failed to write response", http.StatusInternalServerError)
+	}
+}
+
+func className(class any) template.HTML {
+	var i int
+	switch v := class.(type) {
+	case int:
+		i = v
+	case db.Class:
+		i = int(v)
+	default:
+		return ""
+	}
+	return template.HTML(db.ClassToName[db.Class(i)])
+}
+
+func PickCharacter(w http.ResponseWriter, r *http.Request) {
+	class, err := handlers.GetParameterInt(w, r, "class")
+	if err != nil {
+		return
+	}
+	index, err := handlers.GetParameterInt(w, r, "index")
+	if err != nil {
+		return
+	}
 	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		fmt.Println(err)
@@ -87,7 +144,7 @@ func PickClass(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get db", http.StatusBadRequest)
 		return
 	}
-	err = db.UpdateClass(dbPool, userAuth.UserID, index, db.Class(class))
+	err = db.UpdateCharacterClass(dbPool, userAuth.UserID, index, db.Class(class))
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't update class", http.StatusBadRequest)
@@ -110,7 +167,7 @@ func PickClass(w http.ResponseWriter, r *http.Request) {
 
 type PlusData struct {
 	MaxCardID int
-	Team      []db.TeamBox
+	Team      []db.Character
 	Boxes     map[int]db.BoxesState
 	BoxIndex  int
 }
@@ -128,9 +185,9 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	user := db.User{ID: userSesssion.UserID}
-	err = db.SetUser(dbPool, &user)
+	user, err := db.GetUser(dbPool, userSesssion.UserID)
 	if err != nil {
+		fmt.Println("can't get user")
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return
 	}
@@ -142,7 +199,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := db.GetClasses(dbPool, user.ID)
+	team, err := db.GetTeam(dbPool, user.ID)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "user plus", http.StatusBadRequest)
@@ -158,9 +215,9 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl, err := template.
-		New("box-swap.html").
+		New("swap").
 		Funcs(funcsHome).
-		ParseFiles("templates/team.html", "templates/card.html", "templates/box-swap.html")
+		ParseFiles("templates/home.html", "templates/team.html", "templates/card.html")
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "template parsing error", http.StatusInternalServerError)
@@ -193,8 +250,7 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	user := db.User{ID: userSesssion.UserID}
-	err = db.SetUser(dbPool, &user)
+	user, err := db.GetUser(dbPool, userSesssion.UserID)
 	if err != nil {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return

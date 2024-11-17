@@ -58,7 +58,7 @@ func Init() error {
 	if err != nil {
 		return err
 	}
-	err = tableUserClass(dbPool)
+	err = tableUserTeam(dbPool)
 	if err != nil {
 		return err
 	}

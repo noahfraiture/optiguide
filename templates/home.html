@@ -2,7 +2,7 @@
 <div class="min-h-screen bg-gray-100 p-6">
   {{ if .LoggedIn }}
 
-  {{ block "class-picker" . }}{{ end }}
+  {{ block "team" . }}{{ end }}
 
   <div id="card-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <!-- Call the first page of cards -->
@@ -12,4 +12,16 @@
   <h1 class="text-2xl text-center text-gray-700">You are not connected</h1>
   {{ end }}
 </div>
+{{ end }}
+
+{{ define "swap" }}
+{{ range $cardID := iterate .MaxCardID }}
+<div hx-swap-oob="beforeend:#character-boxes-{{ $cardID }}" id="character-box-{{ $.BoxIndex }}">
+  {{ $boxState := boxAtCard $.Boxes $cardID }}
+  {{ block "box" (map "CardID" $cardID "BoxIndex" $.BoxIndex "Done" (doneAtIndex $boxState $.BoxIndex) "Character" (characterAtIndex $.Team $.BoxIndex) ) }}{{ end }}
+</div>
+{{ end }}
+
+{{ block "picker" (map "BoxIndex" .BoxIndex "Character" (characterAtIndex $.Team .BoxIndex)) }}{{ end }}
+
 {{ end }}
