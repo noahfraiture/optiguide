@@ -1,11 +1,11 @@
-{{ define "class-picker" }}
+{{ define "team" }}
 <div class="flex justify-between items-center mb-4">
   <div>
-    <button hx-post="/card/minus" hx-trigger="click" hx-swap="none"
+    <button hx-post="/team/minus" hx-trigger="click" hx-swap="none"
       class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
       -
     </button>
-    <button hx-post="/card/plus" hx-trigger="click" hx-swap="beforeend" hx-target="#pickers"
+    <button hx-post="/team/plus" hx-trigger="click" hx-swap="beforeend" hx-target="#pickers"
       class="px-4 py-2 bg-green-600 text-white rounded ml-2 hover:bg-green-700 transition">
       +
     </button>
@@ -17,7 +17,7 @@
   {{ $team := .Team }}
   {{ range $i := iterate .TeamSize }}
   <!-- picker in a separated file to be able to add one with button plus -->
-  {{ block "picker" (map "BoxIndex" $i "Class" (classAt $team $i)) }}{{ end }}
+  {{ block "picker" (map "BoxIndex" $i "Character" (characterAtIndex $.Team $i)) }}{{ end }}
 
   {{ end }}
 </div>
@@ -27,10 +27,13 @@
 
 <div class="relative inline-block text-left dropdown" id="character-box-{{ .BoxIndex }}">
   <button type="button"
-    class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+    class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
     <!-- Icon of the character picked and its name -->
     <div id="icon-{{ .BoxIndex }}">
-      {{ renderIcon .Class }}
+      {{ renderIcon .Character.Class }}
+    </div>
+    <div id="name-{{ .BoxIndex }}">
+      {{ renderName .Character.Name .BoxIndex }}
     </div>
 
     <!-- Arrow -->
@@ -47,10 +50,11 @@
     <div class="py-1">
       <!-- Every possibility of the dropdown menu -->
       {{ $index := .BoxIndex }}
+      {{ $name := .Character.Name }}
       {{ range $i := iterate nbClass }}
-      <a hx-trigger="click" hx-swap="none" hx-post="/pick-class?class={{ $i }}&index={{ $index }}"
+      <a hx-trigger="click" hx-swap="none" hx-post="/team/pick?class={{ $i }}&index={{ $index }}"
         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 items-center cursor-pointer">
-        {{ renderIcon $i }}
+        {{ renderIcon $i }} {{ className $i }}
       </a>
       {{ end }}
     </div>

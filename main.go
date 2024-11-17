@@ -20,10 +20,12 @@ func main() {
 	}
 
 	http.HandleFunc("/", home.Home)
-	http.HandleFunc("/pick-class", home.PickClass)
+	http.HandleFunc("/team/pick", home.PickCharacter)
+	http.HandleFunc("/team/minus", home.Minus)
+	http.HandleFunc("/team/plus", home.Plus)
+	http.HandleFunc("/team/editable-name", home.RenderEditableName)
+	http.HandleFunc("/team/save-name", home.SaveName)
 	http.HandleFunc("/card", home.RenderCard)
-	http.HandleFunc("/card/minus", home.Minus)
-	http.HandleFunc("/card/plus", home.Plus)
 	http.HandleFunc("/card/toggle", user.Toggle)
 	http.HandleFunc("/auth/google/", user.GoogleLogin)
 	http.HandleFunc("/auth/google/callback", user.GoogleCallback)

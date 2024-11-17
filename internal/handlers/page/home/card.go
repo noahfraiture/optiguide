@@ -3,8 +3,8 @@ package home
 import (
 	"fmt"
 	"net/http"
-	"optiguide/internal/auth"
 	"optiguide/internal/db"
+	"optiguide/internal/handlers"
 	"strconv"
 
 	"html/template"
@@ -12,19 +12,13 @@ import (
 
 type CardData struct {
 	Cards      []db.Card
-	Team       []db.TeamBox
+	Team       []db.Character
 	BoxesState map[int]db.BoxesState
 	Page       int
 	Size       int
 }
 
 func RenderCard(w http.ResponseWriter, r *http.Request) {
-	dbPool, err := db.GetPool()
-	if err != nil {
-		fmt.Println("can't get db in Render")
-		http.Error(w, "Can't get db", http.StatusInternalServerError)
-		return
-	}
 	pageParam := r.URL.Query().Get("page")
 	if pageParam == "" {
 		msg := fmt.Sprintf("No card ID: %s", pageParam)
@@ -39,19 +33,8 @@ func RenderCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	userSesssion, err := auth.GetUser(r)
+	user, err := handlers.GetUser(w, r)
 	if err != nil {
-		msg := "User not found"
-		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
-	user := db.User{ID: userSesssion.UserID}
-	err = db.SetUser(dbPool, &user)
-	if err != nil {
-		msg := fmt.Sprintf("Card not found: %d", page)
-		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 	renderCard(w, page, user)
@@ -78,7 +61,7 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 		return
 	}
 
-	team, err := db.GetClasses(dbPool, user.ID)
+	team, err := db.GetTeam(dbPool, user.ID)
 	if err != nil {
 		fmt.Println("Can't get team", err)
 		http.Error(w, "Can't get team", http.StatusInternalServerError)
