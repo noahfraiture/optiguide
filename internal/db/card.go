@@ -14,25 +14,6 @@ type Card struct {
 	Achievements []string // NOTE : override achievements in slice
 }
 
-func tableCard(db *pgxpool.Pool) error {
-	_, err := db.Exec(context.Background(),
-		`CREATE TABLE IF NOT EXISTS cards(
-			id INTEGER PRIMARY KEY,
-			level INTEGER NOT NULL,
-			info TEXT,
-			task_merge BOOLEAN,
-			task_one TEXT,
-			task_two TEXT,
-			achievements TEXT,
-			dungeon_one TEXT,
-			dungeon_two TEXT,
-			dungeon_three TEXT,
-			spell TEXT
-		);`,
-	)
-	return err
-}
-
 func deleteCards(db *pgxpool.Pool) error {
 	query := "DELETE FROM cards;"
 	_, err := db.Exec(context.Background(), query)

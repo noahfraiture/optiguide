@@ -7,6 +7,10 @@ import (
 	"optiguide/internal/parser"
 	"os"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -22,8 +26,7 @@ func GetPool() (*pgxpool.Pool, error) {
 
 // Define the db connection pool. Don't forget to close !
 func Init() error {
-	var err error
-	connStr := fmt.Sprintf(
+	connStrPgx := fmt.Sprintf(
 		"user=%s password=%s host=%s port=%s dbname=%s",
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
@@ -31,14 +34,50 @@ func Init() error {
 		"5432",
 		os.Getenv("POSTGRES_DB"),
 	)
-	dbPool, err = pgxpool.New(context.Background(), connStr)
+
+	var err error
+	dbPool, err = pgxpool.New(context.Background(), connStrPgx)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
-	err = tableCard(dbPool)
+	if err := buildDatabase(); err != nil && err != migrate.ErrNoChange {
+		fmt.Println("error during building of database")
+		return err
+	}
+
+	if err := rebuildCards(); err != nil {
+		fmt.Println("error during rebuilding of cards")
+		return err
+	}
+
+	return nil
+}
+
+func buildDatabase() error {
+	// Build the database from the migrations files
+	connStrMigration := fmt.Sprintf(
+		"postgresql://%s:%s@%s:%s/%s?sslmode=disable&search_path=public",
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_HOST"),
+		"5432",
+		os.Getenv("POSTGRES_DB"),
+	)
+	m, err := migrate.New(
+		"file://migrations",
+		connStrMigration,
+	)
 	if err != nil {
+		return err
+	}
+	return m.Up()
+}
+
+func rebuildCards() error {
+	dbPool, err := GetPool()
+	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	err = deleteCards(dbPool)
@@ -53,23 +92,5 @@ func Init() error {
 	if err != nil {
 		return err
 	}
-
-	err = tableUser(dbPool)
-	if err != nil {
-		return err
-	}
-	err = tableUserTeam(dbPool)
-	if err != nil {
-		return err
-	}
-	err = tableProgress(dbPool)
-	if err != nil {
-		return err
-	}
-
 	return nil
-}
-
-func Close() {
-	dbPool.Close()
 }

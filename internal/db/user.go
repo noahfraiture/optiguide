@@ -13,18 +13,6 @@ type User struct {
 	TeamSize int
 }
 
-// We define a user as an id (from auth provider), his email and the number of case to display
-func tableUser(db *pgxpool.Pool) error {
-	_, err := db.Exec(context.Background(),
-		`CREATE TABLE IF NOT EXISTS users(
-			id TEXT PRIMARY KEY,
-			team_size INTEGER NOT NULL,
-			email TEXT
-		);`,
-	)
-	return err
-}
-
 func GetUser(db *pgxpool.Pool, userID string) (User, error) {
 	user := User{ID: userID}
 	err := SetUser(dbPool, &user)
@@ -126,19 +114,6 @@ type Character struct {
 	BoxIndex int
 	Class    Class
 	Name     string
-}
-
-func tableUserTeam(db *pgxpool.Pool) error {
-	_, err := db.Exec(context.Background(),
-		`CREATE TABLE IF NOT EXISTS user_characters(
-			user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-			box_index INTEGER NOT NULL,
-			class INTEGER NOT NULL,
-			name TEXT NOT NULL,
-			PRIMARY KEY(user_id, box_index)
-		);`,
-	)
-	return err
 }
 
 // Update the character class, and if first time update, set the name to the name of the class

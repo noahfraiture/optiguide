@@ -88,7 +88,7 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 
 func renderEditableName(name string, index int) template.HTML {
 	return template.HTML(fmt.Sprintf(
-		`<input type="text" placeholder="%[1]s" name="name" hx-post="/team/save-name?index=%[2]d" hx-swap="outerHTML"/>`,
+		`<input type="text" placeholder="%[1]s" name="name" hx-post="/team/save-name?index=%[2]d" hx-swap="outerHTML" class="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hover:bg-green-700 transition" />`,
 		name,
 		index,
 	))
@@ -175,7 +175,7 @@ type PlusData struct {
 func Plus(w http.ResponseWriter, r *http.Request) {
 	dbPool, err := db.GetPool()
 	if err != nil {
-		http.Error(w, "Can't get db", http.StatusInternalServerError)
+		http.Error(w, "Can't get db to plus", http.StatusInternalServerError)
 		return
 	}
 	userSesssion, err := auth.GetUser(r)
@@ -191,7 +191,10 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return
 	}
-	// TODO: block on more that 32
+	if user.TeamSize >= 32 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	err = db.PlusTeamSize(dbPool, user.ID, 1)
 	if err != nil {
 		fmt.Println(err)
@@ -240,7 +243,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 func Minus(w http.ResponseWriter, r *http.Request) {
 	dbPool, err := db.GetPool()
 	if err != nil {
-		http.Error(w, "Can't get db", http.StatusInternalServerError)
+		http.Error(w, "Can't get db to minus", http.StatusInternalServerError)
 		return
 	}
 	userSesssion, err := auth.GetUser(r)
@@ -255,8 +258,8 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return
 	}
-	if user.TeamSize == 1 {
-		renderCard(w, 0, user)
+	if user.TeamSize <= 1 {
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	err = db.PlusTeamSize(dbPool, user.ID, -1)

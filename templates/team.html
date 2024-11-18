@@ -12,7 +12,7 @@
   </div>
 </div>
 
-<div id="pickers" class="flex space-x-4 mb-4">
+<div id="pickers" class="flex flex-wrap justify-start space-x-4 mb-4">
   <!-- Class picker for every character of the team -->
   {{ $team := .Team }}
   {{ range $i := iterate .TeamSize }}
@@ -27,7 +27,7 @@
 
 <div class="relative inline-block text-left dropdown" id="character-box-{{ .BoxIndex }}">
   <button type="button"
-    class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+    class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
     <!-- Icon of the character picked and its name -->
     <div id="icon-{{ .BoxIndex }}">
       {{ renderIcon .Character.Class }}

@@ -25,6 +25,7 @@ COPY --from=build-stage /optiguide /optiguide
 COPY --from=build-stage /app/guide.xlsx /guide.xlsx
 COPY --from=build-stage /app/static /static
 COPY --from=build-stage /app/templates /templates
+COPY --from=build-stage /app/migrations/ /migrations/
 
 EXPOSE 8080
 
