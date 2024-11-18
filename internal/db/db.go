@@ -27,7 +27,7 @@ func Init() error {
 		"user=%s password=%s host=%s port=%s dbname=%s",
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
-		"postgres",
+		os.Getenv("POSTGRES_HOST"),
 		"5432",
 		os.Getenv("POSTGRES_DB"),
 	)

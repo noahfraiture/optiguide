@@ -24,6 +24,7 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Error during authentication", http.StatusInternalServerError)
 		return
 	}
