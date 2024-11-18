@@ -30,7 +30,7 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	dbPool, err := db.GetPool()
 	if err != nil {
-		http.Error(w, "Can't get db", http.StatusInternalServerError)
+		http.Error(w, "Can't get db in callback", http.StatusInternalServerError)
 		return
 	}
 	err = auth.SaveUser(dbPool, user, w, r)

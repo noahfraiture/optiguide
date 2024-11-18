@@ -46,8 +46,8 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 
 	dbPool, err := db.GetPool()
 	if err != nil {
-		fmt.Println("Can't get db")
-		http.Error(w, "Can't get db", http.StatusInternalServerError)
+		fmt.Println("Can't get db to toggle box")
+		http.Error(w, "Can't get db to toggle box", http.StatusInternalServerError)
 		return
 	}
 

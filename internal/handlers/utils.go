@@ -43,7 +43,7 @@ func GetParameterString(w http.ResponseWriter, r *http.Request, name string) (st
 func GetUser(w http.ResponseWriter, r *http.Request) (db.User, error) {
 	dbPool, err := db.GetPool()
 	if err != nil {
-		http.Error(w, "Can't get db", http.StatusInternalServerError)
+		http.Error(w, "Can't get db to get user", http.StatusInternalServerError)
 		return db.User{}, err
 	}
 	userSesssion, err := auth.GetUser(r)
