@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -16,7 +17,7 @@ type GuildUser struct {
 	Progress float32
 }
 
-type GuildMembers struct {
+type Guild struct {
 	Name  string
 	ID    uuid.UUID
 	Users []GuildUser
@@ -24,7 +25,7 @@ type GuildMembers struct {
 
 var ErrNoGuild error = fmt.Errorf("No guild found")
 
-func GetGuild(dbPool *pgxpool.Pool, userID string) (GuildMembers, error) {
+func GetGuild(dbPool *pgxpool.Pool, userID string) ([]Guild, error) {
 	query :=
 		`WITH guild AS (
 			SELECT guilds.id, guilds.name
@@ -39,13 +40,13 @@ func GetGuild(dbPool *pgxpool.Pool, userID string) (GuildMembers, error) {
 	args := pgx.NamedArgs{"user_id": userID}
 	rows, err := dbPool.Query(context.Background(), query, args)
 	if err != nil {
-		return GuildMembers{}, err
+		return nil, err
 	}
-	users := make([]GuildUser, 0)
-	var guildName string
-	var guildID uuid.UUID
+	guilds := make(map[uuid.UUID]Guild, 0)
 	for rows.Next() {
 		var user GuildUser
+		var guildName string
+		var guildID uuid.UUID
 		err = rows.Scan(
 			&user.TeamSize,
 			&user.Email,
@@ -53,31 +54,62 @@ func GetGuild(dbPool *pgxpool.Pool, userID string) (GuildMembers, error) {
 			&guildID,
 		)
 		if err != nil {
-			return GuildMembers{}, err
+			return nil, err
 		}
-		users = append(users, user)
+		if _, ok := guilds[guildID]; !ok {
+			guilds[guildID] = Guild{ID: guildID,
+				Name:  guildName,
+				Users: []GuildUser{},
+			}
+		}
+		guild := guilds[guildID]
+		guild.Users = append(guild.Users, user)
+		guilds[guildID] = guild // we must reassign because previous create a copy
 	}
-	if len(users) == 0 {
-		return GuildMembers{}, ErrNoGuild
+	if len(guilds) == 0 {
+		return nil, ErrNoGuild
 	}
-	return GuildMembers{Name: guildName, ID: guildID, Users: users}, nil
+	guildsSlice := make([]Guild, 0, len(guilds))
+	for _, v := range guilds {
+		guildsSlice = append(guildsSlice, v)
+	}
+	sort.Slice(guildsSlice, func(i, j int) bool {
+		return len(guildsSlice[i].Users) > len(guildsSlice[j].Users)
+	})
+	return guildsSlice, nil
 }
 
 type GuildSize struct {
-	ID   uuid.UUID
-	Name string
-	Size int
+	ID       uuid.UUID
+	Name     string
+	Size     int
+	IsMember bool
 }
 
 // Returns the name and the size of guilds matching the substring
-func SearchGuilds(dbPool *pgxpool.Pool, substring string) ([]GuildSize, error) {
+func SearchGuilds(dbPool *pgxpool.Pool, userID, substring string) ([]GuildSize, error) {
+	if substring == "" {
+		return []GuildSize{}, nil
+	}
 	query :=
-		`SELECT guilds.id, guilds.name, COUNT(user_guilds.user_id)
+		`SELECT
+			guilds.id,
+			guilds.name,
+			COUNT(user_guilds.user_id),
+	        EXISTS (
+	            SELECT 1
+	            FROM user_guilds
+	            WHERE user_guilds.guild_id = guilds.id
+	            AND user_guilds.user_id = @user_id
+	        ) AS is_member
 		FROM guilds
 		JOIN user_guilds ON user_guilds.guild_id = guilds.id
 		WHERE guilds.name ILIKE @substring
 		GROUP BY guilds.id`
-	args := pgx.NamedArgs{"substring": fmt.Sprintf("%%%s%%", substring)}
+	args := pgx.NamedArgs{
+		"substring": fmt.Sprintf("%%%s%%", substring),
+		"user_id":   userID,
+	}
 	rows, err := dbPool.Query(context.Background(), query, args)
 	if err != nil {
 		return []GuildSize{}, err
@@ -85,7 +117,12 @@ func SearchGuilds(dbPool *pgxpool.Pool, substring string) ([]GuildSize, error) {
 	guildsInfo := make([]GuildSize, 0)
 	for rows.Next() {
 		var guildInfo GuildSize
-		err = rows.Scan(&guildInfo.ID, &guildInfo.Name, &guildInfo.Size)
+		err = rows.Scan(
+			&guildInfo.ID,
+			&guildInfo.Name,
+			&guildInfo.Size,
+			&guildInfo.IsMember,
+		)
 		if err != nil {
 			return []GuildSize{}, err
 		}

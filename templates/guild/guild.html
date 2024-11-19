@@ -1,50 +1,81 @@
 {{ define "body" }}
-{{ if .LoggedIn }}
+<div class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {{ if .LoggedIn }}
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-2xl font-bold mb-4 text-gray-700">Recherche de guilde</h2>
+      <div class="flex items-center space-x-4 mb-4">
+        <input type="text" name="name" hx-get="/guild/search" hx-trigger="keyup changed delay:500ms"
+          hx-target="#search-results" hx-swap="outerHTML" placeholder="Recherche une guilde..."
+          class="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+        <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Recherche</button>
+      </div>
 
-<div> Search a guild </div>
-<input type="text" name="name" hx-get="/guild/search" hx-trigger="keyup changed delay:500ms" hx-target="#search-results"
-  hx-swap="outerHTML" placeholder="Search...">
-{{ block "search-results" (map "HasGuild" .HasGuild "Guilds" emptyArr) }}{{ end }}
+      {{ block "search-results" (map "Guilds" emptyArr) }}{{ end }}
+      {{ block "create-guild" . }}{{ end }}
 
-{{ if .HasGuild }}
-{{ block "guild" .Guild }}{{ end }}
-{{ else }}
-{{ block "no-guild" . }}{{ end }}
-{{ end }}
-
-{{ else }}
-<h1>You are not connected</h1>
-{{ end }}
-
-{{ end }}
-
-<!-- Display if you don't have a guild -->
-{{ define "no-guild" }}
-
-<div> Create your guild </div>
-<input type="text" name="name" hx-get="/guild/create" placeholder="Name..." hx-swap="none">
+      {{ if len .Guilds }}
+      {{ block "guilds" .Guilds }}{{ end }}
+      {{ end }}
+    </div>
+    {{ else }}
+    <div class="flex justify-center items-center h-full">
+      <h1 class="text-3xl text-green-700 font-bold">You are not connected</h1>
+    </div>
+    {{ end }}
+  </div>
+</div>
 {{ end }}
 
 {{ define "search-results" }}
-<div id="search-results">
+<div id="search-results" class="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
   {{ range .Guilds }}
-  {{ .Name }}
-  {{ .Size }}
-  <button hx-post="/guild/join?guild={{ .ID }}" hx-swap="none">Join</button>
+  <div class="bg-white shadow-md rounded-lg p-4">
+    <h4 class="text-lg font-semibold text-green-700">{{ .Name }}</h4>
+    <p class="text-gray-600">Membres : {{ .Size }}</p>
+    {{ if not .IsMember }}
+    <button hx-post="/guild/join?guild={{ .ID }}" hx-swap="none"
+      class="mt-2 w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">Rejoindre</button>
+      {{ end }}
+  </div>
   {{ end }}
 </div>
-
 {{ end }}
 
-<!-- Display if you have a guild -->
+{{ define "create-guild" }}
+<div class="mt-6">
+  <h3 class="text-xl font-semibold text-green-700 mb-3">Créer votre guilde</h3>
+  <input type="text" name="name" placeholder="Nommer votre guilde..." hx-get="/guild/create" hx-swap="beforeend"
+    hx-target="#guilds" hx-on::after-request="event.target.value = ''"
+    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+</div>
+{{ end }}
+
+{{ define "guilds" }}
+<div id="guilds" class="mt-6">
+  <h2 class="text-3xl font-bold text-green-700 mb-6">Vos Guildes</h2>
+  {{ range . }}
+  {{ block "guild" . }}{{ end }}
+  {{ end }}
+</div>
+{{ end }}
+
 {{ define "guild" }}
-
-Guild {{ .Name }}
-<button hx-delete="/guild/leave?id={{ .ID }}" hx-swap="none">Leave</button>
-{{ range .Users }}
-{{ .Email }}
-{{ .TeamSize }}
-{{ .Progress }}
-{{ end }}
-
+<div id="guild-{{ .ID }}" class="mb-6 bg-white shadow-lg rounded-lg p-6">
+  <h3 class="text-2xl font-bold text-green-700 mb-4">{{ .Name }}</h3>
+  <div class="flex justify-between items-center mb-4">
+    <button hx-delete="/guild/leave?id={{ .ID }}" hx-swap="delete" hx-target="#guild-{{ .ID }}"
+      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Quitter la guilde</button>
+  </div>
+  <div class="mt-6">
+    <h4 class="text-xl font-semibold text-gray-700 mb-3">Membres :</h4>
+    {{ range .Users }}
+    <div class="border-t border-gray-200 pt-3">
+      <p><span class="font-medium text-green-600">Email :</span> {{ .Email }}</p>
+      <p><span class="font-medium text-green-600">Taille de la Team:</span> {{ .TeamSize }}</p>
+      <p><span class="font-medium text-green-600">Progression:</span> {{ .Progress }}</p>
+    </div>
+    {{ end }}
+  </div>
+</div>
 {{ end }}

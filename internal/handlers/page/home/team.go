@@ -66,7 +66,7 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "can't get user", http.StatusBadRequest)
+		http.Error(w, "can't get user", http.StatusUnauthorized)
 		return
 	}
 	err = db.UpdateCharacterName(dbPool, userAuth.UserID, index, name)
@@ -88,7 +88,7 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 
 func renderEditableName(name string, index int) template.HTML {
 	return template.HTML(fmt.Sprintf(
-		`<input type="text" placeholder="%[1]s" name="name" hx-post="/team/save-name?index=%[2]d" hx-swap="outerHTML" class="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hover:bg-green-700 transition" />`,
+		`<input type="text" placeholder="%[1]s" name="name" hx-post="/team/save-name?index=%[2]d" hx-swap="outerHTML" class="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hover:bg-green-700 transition" autofocus />`,
 		name,
 		index,
 	))
@@ -135,7 +135,7 @@ func PickCharacter(w http.ResponseWriter, r *http.Request) {
 	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "can't get user", http.StatusBadRequest)
+		http.Error(w, "can't get user", http.StatusUnauthorized)
 		return
 	}
 	dbPool, err := db.GetPool()
@@ -182,7 +182,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := "User not found"
 		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
+		http.Error(w, msg, http.StatusUnauthorized)
 		return
 	}
 	user, err := db.GetUser(dbPool, userSesssion.UserID)
@@ -220,7 +220,11 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.
 		New("swap").
 		Funcs(funcsHome).
-		ParseFiles("templates/home/home.html", "templates/home/team.html", "templates/home/card.html")
+		ParseFiles(
+			"templates/home/home.html",
+			"templates/home/team.html",
+			"templates/home/card.html",
+		)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "template parsing error", http.StatusInternalServerError)
@@ -250,7 +254,7 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := "User not found"
 		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
+		http.Error(w, msg, http.StatusUnauthorized)
 		return
 	}
 	user, err := db.GetUser(dbPool, userSesssion.UserID)
