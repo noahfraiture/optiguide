@@ -71,7 +71,7 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 	tmpl, err := template.
 		New("card.html").
 		Funcs(funcsHome).
-		ParseFiles("templates/card.html")
+		ParseFiles("templates/home/card.html")
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)

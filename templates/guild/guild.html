@@ -1,0 +1,50 @@
+{{ define "body" }}
+{{ if .LoggedIn }}
+
+<div> Search a guild </div>
+<input type="text" name="name" hx-get="/guild/search" hx-trigger="keyup changed delay:500ms" hx-target="#search-results"
+  hx-swap="outerHTML" placeholder="Search...">
+{{ block "search-results" (map "HasGuild" .HasGuild "Guilds" emptyArr) }}{{ end }}
+
+{{ if .HasGuild }}
+{{ block "guild" .Guild }}{{ end }}
+{{ else }}
+{{ block "no-guild" . }}{{ end }}
+{{ end }}
+
+{{ else }}
+<h1>You are not connected</h1>
+{{ end }}
+
+{{ end }}
+
+<!-- Display if you don't have a guild -->
+{{ define "no-guild" }}
+
+<div> Create your guild </div>
+<input type="text" name="name" hx-get="/guild/create" placeholder="Name..." hx-swap="none">
+{{ end }}
+
+{{ define "search-results" }}
+<div id="search-results">
+  {{ range .Guilds }}
+  {{ .Name }}
+  {{ .Size }}
+  <button hx-post="/guild/join?guild={{ .ID }}" hx-swap="none">Join</button>
+  {{ end }}
+</div>
+
+{{ end }}
+
+<!-- Display if you have a guild -->
+{{ define "guild" }}
+
+Guild {{ .Name }}
+<button hx-delete="/guild/leave?id={{ .ID }}" hx-swap="none">Leave</button>
+{{ range .Users }}
+{{ .Email }}
+{{ .TeamSize }}
+{{ .Progress }}
+{{ end }}
+
+{{ end }}
