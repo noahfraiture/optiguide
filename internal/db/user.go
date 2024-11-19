@@ -13,14 +13,14 @@ type User struct {
 	TeamSize int
 }
 
-func GetUser(db *pgxpool.Pool, userID string) (User, error) {
+func GetUser(dbPool *pgxpool.Pool, userID string) (User, error) {
 	user := User{ID: userID}
 	err := SetUser(dbPool, &user)
 	return user, err
 }
 
 // NOTE : insert the user and set its email and team_size
-func SetUser(db *pgxpool.Pool, user *User) error {
+func SetUser(dbPool *pgxpool.Pool, user *User) error {
 	query := `WITH inputs(id, email, team_size) AS (
 		VALUES (@id::text, @email::text, 1::integer)
 	), ins_user AS (
@@ -40,13 +40,13 @@ func SetUser(db *pgxpool.Pool, user *User) error {
 	SELECT id, email, team_size FROM ins_user UNION SELECT id, email, team_size FROM existing;`
 
 	args := pgx.NamedArgs{"id": user.ID, "email": user.Email, "class": NONE, "name": "Perso 1"}
-	row := db.QueryRow(context.Background(), query, args)
+	row := dbPool.QueryRow(context.Background(), query, args)
 	err := row.Scan(&user.ID, &user.Email, &user.TeamSize)
 	return err
 }
 
-func PlusTeamSize(db *pgxpool.Pool, userID string, value int) error {
-	_, err := db.Exec(
+func PlusTeamSize(dbPool *pgxpool.Pool, userID string, value int) error {
+	_, err := dbPool.Exec(
 		context.Background(),
 		`UPDATE users SET team_size = users.team_size + @value WHERE id = @id;`,
 		pgx.NamedArgs{
@@ -117,13 +117,13 @@ type Character struct {
 }
 
 // Update the character class, and if first time update, set the name to the name of the class
-func UpdateCharacterClass(db *pgxpool.Pool, userID string, boxIndex int, class Class) error {
+func UpdateCharacterClass(dbPool *pgxpool.Pool, userID string, boxIndex int, class Class) error {
 	query :=
 		`INSERT INTO user_characters(user_id, box_index, class, name)
 		VALUES (@user_id, @box_index, @class, @name)
 		ON CONFLICT (user_id, box_index)
 		DO UPDATE SET class = @class`
-	_, err := db.Exec(context.Background(), query, pgx.NamedArgs{
+	_, err := dbPool.Exec(context.Background(), query, pgx.NamedArgs{
 		"user_id":   userID,
 		"box_index": boxIndex,
 		"class":     class,
@@ -133,13 +133,13 @@ func UpdateCharacterClass(db *pgxpool.Pool, userID string, boxIndex int, class C
 }
 
 // Update the character class, and if first time update, set the class to NONE which is the current displayed
-func UpdateCharacterName(db *pgxpool.Pool, userID string, boxIndex int, name string) error {
+func UpdateCharacterName(dbPool *pgxpool.Pool, userID string, boxIndex int, name string) error {
 	query :=
 		`INSERT INTO user_characters(user_id, box_index, class, name)
 		VALUES (@user_id, @box_index, @class, @name)
 		ON CONFLICT (user_id, box_index)
 		DO UPDATE SET name = @name`
-	_, err := db.Exec(context.Background(), query, pgx.NamedArgs{
+	_, err := dbPool.Exec(context.Background(), query, pgx.NamedArgs{
 		"user_id":   userID,
 		"box_index": boxIndex,
 		"class":     NONE,
@@ -148,7 +148,7 @@ func UpdateCharacterName(db *pgxpool.Pool, userID string, boxIndex int, name str
 	return err
 }
 
-func GetTeam(db *pgxpool.Pool, userID string) ([]Character, error) {
+func GetTeam(dbPoll *pgxpool.Pool, userID string) ([]Character, error) {
 	query :=
 		`SELECT user_id, box_index, class, name
 		FROM user_characters
@@ -156,7 +156,7 @@ func GetTeam(db *pgxpool.Pool, userID string) ([]Character, error) {
 		WHERE user_id = @user_id AND box_index < team_size
 		ORDER BY box_index;`
 	args := pgx.NamedArgs{"user_id": userID}
-	rows, err := db.Query(context.Background(), query, args)
+	rows, err := dbPoll.Query(context.Background(), query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ type BoxesState map[int]bool
 // each box of each card BoxesState is map[boxIndex]isDone := map[int]bool
 // We only need the done status of a box because we only need the class &
 // name once, when we get the whole team
-func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, error) {
+func GetRenderBoxByCards(dbPool *pgxpool.Pool, userID string) (map[int]BoxesState, error) {
 	// We can't make a LEFT JOIN to have `done` as false for a default value
 	// Because we can't know `card_id`
 	query :=
@@ -191,7 +191,7 @@ func GetRenderBoxByCards(db *pgxpool.Pool, userID string) (map[int]BoxesState, e
 	args := pgx.NamedArgs{
 		"user_id": userID,
 	}
-	rows, err := db.Query(context.Background(), query, args)
+	rows, err := dbPool.Query(context.Background(), query, args)
 	if err != nil {
 		return nil, err
 	}

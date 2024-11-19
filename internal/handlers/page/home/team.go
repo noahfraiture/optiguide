@@ -24,6 +24,8 @@ var funcsTeam = template.FuncMap{
 	},
 }
 
+// Here we render HTML via a function instead of a box to be able to encapsulate
+// it in a hx-swap-oob in PickCharacter
 func renderIcon(class any) template.HTML {
 	var i int
 	switch v := class.(type) {
@@ -49,8 +51,6 @@ func renderName(name string, index int) template.HTML {
 	))
 }
 
-// FIX: the form is correctly parse and all, but the value that arrive
-// here is the original name and not the new one
 func SaveName(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	index, err := handlers.GetParameterInt(w, r, "index")
@@ -220,7 +220,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.
 		New("swap").
 		Funcs(funcsHome).
-		ParseFiles("templates/home.html", "templates/team.html", "templates/card.html")
+		ParseFiles("templates/home/home.html", "templates/home/team.html", "templates/home/card.html")
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "template parsing error", http.StatusInternalServerError)

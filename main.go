@@ -7,6 +7,7 @@ import (
 
 	"optiguide/internal/auth"
 	"optiguide/internal/db"
+	"optiguide/internal/handlers/page/guild"
 	"optiguide/internal/handlers/page/home"
 	"optiguide/internal/handlers/user"
 )
@@ -19,6 +20,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Home
 	http.HandleFunc("/", home.Home)
 	http.HandleFunc("/team/pick", home.PickCharacter)
 	http.HandleFunc("/team/minus", home.Minus)
@@ -27,6 +29,15 @@ func main() {
 	http.HandleFunc("/team/save-name", home.SaveName)
 	http.HandleFunc("/card", home.RenderCard)
 	http.HandleFunc("/card/toggle", user.Toggle)
+
+	// Guild
+	http.HandleFunc("/guild", guild.Guild)
+	http.HandleFunc("/guild/create", guild.GuildCreate)
+	http.HandleFunc("/guild/search", guild.GuildSearch)
+	http.HandleFunc("/guild/join", guild.GuildJoin)
+	http.HandleFunc("/guild/leave", guild.GuildLeave)
+
+	// TopBar
 	http.HandleFunc("/auth/google/", user.GoogleLogin)
 	http.HandleFunc("/auth/google/callback", user.GoogleCallback)
 	http.HandleFunc("/logout", user.Logout)

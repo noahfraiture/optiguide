@@ -41,3 +41,15 @@ CREATE TABLE IF NOT EXISTS progress (
   done BOOLEAN NOT NULL,
   PRIMARY KEY (user_id, card_id, box_index)
 );
+
+-- Guild
+CREATE TABLE IF NOT EXISTS guilds (id UUID PRIMARY KEY, name VARCHAR(64) NOT NULL);
+
+-- Guild appartenance
+-- We keep it in another table than user to have the possibility of
+-- having multiple guilds later
+CREATE TABLE IF NOT EXISTS user_guilds (
+  user_id TEXT,
+  guild_id UUID REFERENCES guilds (id) ON DELETE CASCADE,
+  PRIMARY KEY (user_id, guild_id)
+);

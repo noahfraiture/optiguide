@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"optiguide/internal/auth"
 	"optiguide/internal/db"
+	"optiguide/internal/handlers"
 	topbar "optiguide/internal/handlers/page"
 	"sort"
 	"text/template"
@@ -20,9 +21,6 @@ type HomeData struct {
 var funcsHome = template.FuncMap{
 	"add": func(i, j int) int {
 		return i + j
-	},
-	"minus": func(i, j int) int {
-		return i - j
 	},
 	"iterate": func(max int) []int {
 		r := make([]int, max)
@@ -56,15 +54,7 @@ var funcsHome = template.FuncMap{
 		return db.BoxesState{}
 	},
 	"renderIcon": renderIcon,
-	"map": func(args ...any) map[string]any {
-		dict := make(map[string]any)
-		for i := range len(args) / 2 {
-			if v, ok := args[i*2].(string); ok {
-				dict[v] = args[i*2+1]
-			}
-		}
-		return dict
-	},
+	"map":        handlers.RenderMap,
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
@@ -74,21 +64,6 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 	for k, v := range funcsTeam {
 		funcs[k] = v
-	}
-	tmpl, err := template.
-		New("base.html").
-		Funcs(funcs).
-		ParseFiles(
-			"templates/base.html",
-			"templates/topbar.html",
-			"templates/home.html",
-			"templates/team.html",
-			"templates/card.html",
-		)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Unable to load template", http.StatusInternalServerError)
-		return
 	}
 
 	dbPool, err := db.GetPool()
@@ -121,6 +96,22 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Can't get boxes", http.StatusInternalServerError)
 			return
 		}
+	}
+
+	tmpl, err := template.
+		New("base.html").
+		Funcs(funcs).
+		ParseFiles(
+			"templates/base.html",
+			"templates/topbar.html",
+			"templates/home/home.html",
+			"templates/home/team.html",
+			"templates/home/card.html",
+		)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Unable to load template", http.StatusInternalServerError)
+		return
 	}
 	err = tmpl.ExecuteTemplate(w, "base.html",
 		HomeData{
