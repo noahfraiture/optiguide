@@ -25,6 +25,7 @@ type Guild struct {
 
 var ErrNoGuild error = fmt.Errorf("No guild found")
 
+// TODO : get progress (percentage of progression on cards)
 func GetGuild(dbPool *pgxpool.Pool, userID string) ([]Guild, error) {
 	query :=
 		`WITH guild AS (
@@ -33,7 +34,21 @@ func GetGuild(dbPool *pgxpool.Pool, userID string) ([]Guild, error) {
 			JOIN user_guilds ON guilds.id = user_guilds.guild_id
 			WHERE user_guilds.user_id = @user_id
 		)
-		SELECT users.team_size, users.email, guild.name, guild.id
+		SELECT
+		users.team_size,
+		users.email,
+		(
+			SELECT
+				COUNT(CASE WHEN progress.done = TRUE THEN 1 END)
+				* 100.0
+				/ ((SELECT COUNT(*) FROM cards) * users.team_size)
+			FROM progress
+			JOIN users ON users.id = @user_id
+			WHERE progress.user_id = @user_id AND progress.box_index < users.team_size
+			GROUP BY users.id
+		),
+		guild.name,
+		guild.id
 		FROM users
 		JOIN user_guilds ON user_guilds.user_id = users.id
 		JOIN guild ON guild.id = user_guilds.guild_id;`
@@ -50,6 +65,7 @@ func GetGuild(dbPool *pgxpool.Pool, userID string) ([]Guild, error) {
 		err = rows.Scan(
 			&user.TeamSize,
 			&user.Email,
+			&user.Progress,
 			&guildName,
 			&guildID,
 		)

@@ -80,17 +80,20 @@ func rebuildCards() error {
 		fmt.Println(err)
 		return err
 	}
-	err = deleteCards(dbPool)
+	c, err := GetCards(dbPool, 0)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
-	cards, err := parser.Parse("guide.xlsx")
-	if err != nil {
-		return err
-	}
-	err = insertCards(dbPool, cards)
-	if err != nil {
-		return err
+	if len(c) == 0 {
+		cards, err := parser.Parse("guide.xlsx")
+		if err != nil {
+			return err
+		}
+		err = insertCards(dbPool, cards)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
