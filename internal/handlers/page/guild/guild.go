@@ -13,8 +13,7 @@ import (
 
 type GuildData struct {
 	LoggedIn bool
-	HasGuild bool
-	Guild    db.GuildMembers
+	Guilds   []db.Guild
 }
 
 var funcsGuild template.FuncMap = template.FuncMap{
@@ -27,6 +26,26 @@ func Guild(w http.ResponseWriter, r *http.Request) {
 	for k, v := range topbar.FuncsTopbar {
 		funcs[k] = v
 	}
+
+	dbPool, err := db.GetPool()
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Can't get db", http.StatusInternalServerError)
+		return
+	}
+
+	userAuth, err := auth.GetUser(r)
+	loggedIn := err == nil
+	var guilds []db.Guild
+	if loggedIn {
+		guilds, err = db.GetGuild(dbPool, userAuth.UserID)
+		if err != nil && err != db.ErrNoGuild {
+			fmt.Println(err)
+			http.Error(w, "Error fetching guild", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	tmpl, err := template.
 		New("base.html").
 		Funcs(funcs).
@@ -39,32 +58,9 @@ func Guild(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
 		return
 	}
-
-	dbPool, err := db.GetPool()
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Can't get db", http.StatusInternalServerError)
-		return
-	}
-
-	userAuth, err := auth.GetUser(r)
-	loggedIn := err == nil
-	hasGuild := false
-	var guild db.GuildMembers
-	if loggedIn {
-		guild, err = db.GetGuild(dbPool, userAuth.UserID)
-		if err != nil && err != db.ErrNoGuild {
-			fmt.Println(err)
-			http.Error(w, "Error fetching guild", http.StatusInternalServerError)
-			return
-		}
-		hasGuild = err != db.ErrNoGuild
-	}
-
 	err = tmpl.ExecuteTemplate(w, "base.html", GuildData{
 		LoggedIn: loggedIn,
-		HasGuild: hasGuild,
-		Guild:    guild,
+		Guilds:   guilds,
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -81,24 +77,19 @@ func GuildSearch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get db in guild search", http.StatusBadRequest)
 		return
 	}
-	guilds, err := db.SearchGuilds(dbPool, name)
+
+	userAuth, err := auth.GetUser(r)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusUnauthorized)
+		return
+	}
+
+	guilds, err := db.SearchGuilds(dbPool, userAuth.UserID, name)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
 		return
-	}
-
-	userAuth, err := auth.GetUser(r)
-	loggedIn := err == nil
-	hasGuild := false
-	if loggedIn {
-		_, err = db.GetGuild(dbPool, userAuth.UserID)
-		if err != nil && err != db.ErrNoGuild {
-			fmt.Println(err)
-			http.Error(w, "Error fetching guild", http.StatusInternalServerError)
-			return
-		}
-		hasGuild = err != db.ErrNoGuild
 	}
 
 	tmpl, err := template.New("guild.html").Funcs(funcsGuild).ParseFiles("templates/guild/guild.html")
@@ -108,8 +99,7 @@ func GuildSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = tmpl.ExecuteTemplate(w, "search-results", map[string]any{
-		"HasGuild": hasGuild,
-		"Guilds":   guilds,
+		"Guilds": guilds,
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -120,11 +110,10 @@ func GuildSearch(w http.ResponseWriter, r *http.Request) {
 
 func GuildCreate(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
-	fmt.Println("name", name)
 	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "can't get user in guild create", http.StatusBadRequest)
+		http.Error(w, "can't get user in guild create", http.StatusUnauthorized)
 		return
 	}
 	dbPool, err := db.GetPool()
@@ -133,6 +122,13 @@ func GuildCreate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get db in guild create", http.StatusBadRequest)
 		return
 	}
+	user, err := db.GetUser(dbPool, userAuth.UserID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusBadRequest)
+		return
+	}
+
 	ctx := context.Background()
 	tx, err := dbPool.Begin(ctx)
 	if err != nil {
@@ -161,7 +157,31 @@ func GuildCreate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't commit transaction", http.StatusBadRequest)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	tmpl, err := template.
+		New("guild").
+		Funcs(funcsGuild).
+		ParseFiles(
+			"templates/guild/guild.html",
+		)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Unable to load template", http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "guild", db.Guild{
+		Name: name,
+		ID:   guildID,
+		Users: []db.GuildUser{{
+			Email:    user.Email,
+			TeamSize: user.TeamSize,
+			Progress: 0,
+		}},
+	})
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Unable to execute template", http.StatusInternalServerError)
+		return
+	}
 }
 
 func GuildJoin(w http.ResponseWriter, r *http.Request) {
@@ -172,7 +192,7 @@ func GuildJoin(w http.ResponseWriter, r *http.Request) {
 	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "can't get user in guild create", http.StatusBadRequest)
+		http.Error(w, "can't get user in guild create", http.StatusUnauthorized)
 		return
 	}
 	dbPool, err := db.GetPool()
@@ -198,7 +218,7 @@ func GuildLeave(w http.ResponseWriter, r *http.Request) {
 	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "can't get user in guild create", http.StatusBadRequest)
+		http.Error(w, "can't get user in guild create", http.StatusUnauthorized)
 		return
 	}
 	dbPool, err := db.GetPool()
@@ -237,5 +257,5 @@ func GuildLeave(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't commit transaction", http.StatusBadRequest)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
 }

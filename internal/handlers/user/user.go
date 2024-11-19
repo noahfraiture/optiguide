@@ -13,7 +13,7 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := fmt.Sprintf("Could not get user: %v", err)
 		fmt.Println(msg)
-		http.Error(w, msg, http.StatusBadRequest)
+		http.Error(w, msg, http.StatusUnauthorized)
 		return
 	}
 
