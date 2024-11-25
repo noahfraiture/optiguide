@@ -14,7 +14,7 @@ import (
 type GuildUser struct {
 	Email    string
 	TeamSize int
-	Progress float32
+	Progress float64
 }
 
 type Guild struct {
@@ -35,23 +35,24 @@ func GetGuild(dbPool *pgxpool.Pool, userID string) ([]Guild, error) {
 			WHERE user_guilds.user_id = @user_id
 		)
 		SELECT
-		users.team_size,
-		users.email,
-		(
-			SELECT
-				COUNT(CASE WHEN progress.done = TRUE THEN 1 END)
-				* 100.0
-				/ ((SELECT COUNT(*) FROM cards) * users.team_size)
-			FROM progress
-			JOIN users ON users.id = @user_id
-			WHERE progress.user_id = @user_id AND progress.box_index < users.team_size
-			GROUP BY users.id
-		),
-		guild.name,
-		guild.id
-		FROM users
-		JOIN user_guilds ON user_guilds.user_id = users.id
-		JOIN guild ON guild.id = user_guilds.guild_id;`
+			users.team_size,
+			users.email,
+			ROUND(
+				(
+					SELECT COUNT(*)
+					FROM progress
+					WHERE progress.user_id = users.id
+						AND progress.box_index < users.team_size
+						AND progress.done = TRUE
+				) * 100.0 / (SELECT COUNT(*) * users.team_size FROM cards),
+				2
+			),
+			guild.name,
+			guild.id
+		FROM guild
+		JOIN user_guilds ON user_guilds.guild_id = guild.id
+		JOIN users ON users.id = user_guilds.user_id
+		;`
 	args := pgx.NamedArgs{"user_id": userID}
 	rows, err := dbPool.Query(context.Background(), query, args)
 	if err != nil {
