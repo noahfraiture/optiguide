@@ -14,9 +14,7 @@
       {{ block "search-results" (map "Guilds" emptyArr) }}{{ end }}
       {{ block "create-guild" . }}{{ end }}
 
-      {{ if len .Guilds }}
       {{ block "guilds" .Guilds }}{{ end }}
-      {{ end }}
     </div>
     {{ else }}
     <div class="flex justify-center items-center h-full">
@@ -73,7 +71,7 @@
     <div class="border-t border-gray-200 pt-3">
       <p><span class="font-medium text-green-600">Email :</span> {{ .Email }}</p>
       <p><span class="font-medium text-green-600">Taille de la Team:</span> {{ .TeamSize }}</p>
-      <p><span class="font-medium text-green-600">Progression:</span> {{ .Progress }}</p>
+      <p><span class="font-medium text-green-600">Progression:</span> {{ .Progress }}%</p>
     </div>
     {{ end }}
   </div>
