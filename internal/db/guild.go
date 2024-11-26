@@ -26,7 +26,7 @@ type Guild struct {
 var ErrNoGuild error = fmt.Errorf("No guild found")
 
 // TODO : get progress (percentage of progression on cards)
-func GetGuild(dbPool *pgxpool.Pool, userID string) ([]Guild, error) {
+func GetGuild(dbPool *pgxpool.Pool, user User) ([]Guild, error) {
 	query :=
 		`WITH guild AS (
 			SELECT guilds.id, guilds.name
@@ -53,7 +53,7 @@ func GetGuild(dbPool *pgxpool.Pool, userID string) ([]Guild, error) {
 		JOIN user_guilds ON user_guilds.guild_id = guild.id
 		JOIN users ON users.id = user_guilds.user_id
 		;`
-	args := pgx.NamedArgs{"user_id": userID}
+	args := pgx.NamedArgs{"user_id": user.ID}
 	rows, err := dbPool.Query(context.Background(), query, args)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ type GuildSize struct {
 }
 
 // Returns the name and the size of guilds matching the substring
-func SearchGuilds(dbPool *pgxpool.Pool, userID, substring string) ([]GuildSize, error) {
+func SearchGuilds(dbPool *pgxpool.Pool, user User, substring string) ([]GuildSize, error) {
 	if substring == "" {
 		return []GuildSize{}, nil
 	}
@@ -125,7 +125,7 @@ func SearchGuilds(dbPool *pgxpool.Pool, userID, substring string) ([]GuildSize, 
 		GROUP BY guilds.id`
 	args := pgx.NamedArgs{
 		"substring": fmt.Sprintf("%%%s%%", substring),
-		"user_id":   userID,
+		"user_id":   user.ID,
 	}
 	rows, err := dbPool.Query(context.Background(), query, args)
 	if err != nil {
@@ -161,19 +161,19 @@ func CreateGuild(dbPool DB, ctx context.Context, name string) (uuid.UUID, error)
 	_, err := dbPool.Exec(ctx, query, args)
 	return id, err
 }
-func JoinGuild(dbPool DB, ctx context.Context, guildID uuid.UUID, userID string) error {
+func JoinGuild(dbPool DB, ctx context.Context, guildID uuid.UUID, user User) error {
 	query :=
 		`INSERT INTO user_guilds(user_id, guild_id)
 		VALUES (@user_id, @guild_id);`
-	args := pgx.NamedArgs{"user_id": userID, "guild_id": guildID}
+	args := pgx.NamedArgs{"user_id": user.ID, "guild_id": guildID}
 	_, err := dbPool.Exec(ctx, query, args)
 	return err
 }
 
-func LeaveGuild(dbPool DB, ctx context.Context, guildID uuid.UUID, userID string) error {
+func LeaveGuild(dbPool DB, ctx context.Context, guildID uuid.UUID, user User) error {
 	query :=
 		`DELETE FROM user_guilds WHERE user_id = @user_id AND guild_id = @guild_id;`
-	args := pgx.NamedArgs{"user_id": userID, "guild_id": guildID}
+	args := pgx.NamedArgs{"user_id": user.ID, "guild_id": guildID}
 	_, err := dbPool.Exec(ctx, query, args)
 	return err
 }

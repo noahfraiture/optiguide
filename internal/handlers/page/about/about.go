@@ -13,7 +13,7 @@ import (
 )
 
 type aboutData struct {
-	LoggedIn bool
+	topbar.TopbarData
 }
 
 var funcsAbout = template.FuncMap{
@@ -27,8 +27,24 @@ func About(w http.ResponseWriter, r *http.Request) {
 		funcs[k] = v
 	}
 
-	_, err := auth.GetUser(r)
+	dbPool, err := db.GetPool()
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Can't get db", http.StatusInternalServerError)
+		return
+	}
+
+	userAuth, err := auth.GetUser(r)
 	loggedIn := err == nil
+	var user db.User
+	if loggedIn {
+		user, err = db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Error fetching guild", http.StatusInternalServerError)
+			return
+		}
+	}
 
 	tmpl, err := template.New("base.html").
 		Funcs(funcs).
@@ -43,7 +59,7 @@ func About(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = tmpl.ExecuteTemplate(w, "base.html", aboutData{
-		LoggedIn: loggedIn,
+		TopbarData: topbar.TopbarData{LoggedIn: loggedIn, Username: user.Username},
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -89,8 +105,14 @@ func SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to get user", http.StatusUnauthorized)
 		return
 	}
+	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusInternalServerError)
+		return
+	}
 
-	if err := db.StoreFeedback(dbPool, context.Background(), feedback, userAuth.UserID); err != nil {
+	if err := db.StoreFeedback(dbPool, context.Background(), feedback, user); err != nil {
 		http.Error(w, "Failed to store feedback", http.StatusInternalServerError)
 		return
 	}

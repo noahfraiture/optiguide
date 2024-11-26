@@ -40,15 +40,28 @@ func SaveUser(dbpool *pgxpool.Pool, user goth.User, w http.ResponseWriter, r *ht
 	if err != nil {
 		return err
 	}
-	userDB := db.User{ID: user.UserID, Email: user.Email}
-	return db.SetUser(dbpool, &userDB)
+	_, err = db.GetUserFromProvider(dbpool, user.Provider, user.UserID)
+	return err
 }
 
 func ClearSession(w http.ResponseWriter, r *http.Request) error {
+	fmt.Println("Clearing session...")
 	session, err := store.Get(r, "user-session")
 	if err != nil {
+		fmt.Printf("Error getting session: %v\n", err)
 		return err
 	}
 	session.Options.MaxAge = -1
-	return session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		fmt.Printf("Error saving session: %v\n", err)
+		return err
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:   "user-session",
+		MaxAge: -1,
+		Path:   "/",
+	})
+	fmt.Println("Session cleared successfully")
+	return nil
 }

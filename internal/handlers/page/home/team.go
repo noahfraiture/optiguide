@@ -69,7 +69,13 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get user", http.StatusUnauthorized)
 		return
 	}
-	err = db.UpdateCharacterName(dbPool, userAuth.UserID, index, name)
+	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusInternalServerError)
+		return
+	}
+	err = db.UpdateCharacterName(dbPool, user, index, name)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't update char", http.StatusBadRequest)
@@ -144,7 +150,13 @@ func PickCharacter(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get db", http.StatusBadRequest)
 		return
 	}
-	err = db.UpdateCharacterClass(dbPool, userAuth.UserID, index, db.Class(class))
+	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusInternalServerError)
+		return
+	}
+	err = db.UpdateCharacterClass(dbPool, user, index, db.Class(class))
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't update class", http.StatusBadRequest)
@@ -178,31 +190,31 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Can't get db to plus", http.StatusInternalServerError)
 		return
 	}
-	userSesssion, err := auth.GetUser(r)
+	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		msg := "User not found"
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusUnauthorized)
 		return
 	}
-	user, err := db.GetUser(dbPool, userSesssion.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
 	if err != nil {
-		fmt.Println("can't get user")
-		http.Error(w, "error for user", http.StatusBadRequest)
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusInternalServerError)
 		return
 	}
 	if user.TeamSize >= 32 {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	err = db.PlusTeamSize(dbPool, user.ID, 1)
+	err = db.PlusTeamSize(dbPool, user, 1)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "user plus", http.StatusBadRequest)
 		return
 	}
 
-	team, err := db.GetTeam(dbPool, user.ID)
+	team, err := db.GetTeam(dbPool, user)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "user plus", http.StatusBadRequest)
@@ -210,7 +222,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.TeamSize += 1
-	boxes, err := db.GetRenderBoxByCards(dbPool, user.ID)
+	boxes, err := db.GetRenderBoxByCards(dbPool, user)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "boxes", http.StatusBadRequest)
@@ -250,14 +262,14 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Can't get db to minus", http.StatusInternalServerError)
 		return
 	}
-	userSesssion, err := auth.GetUser(r)
+	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		msg := "User not found"
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusUnauthorized)
 		return
 	}
-	user, err := db.GetUser(dbPool, userSesssion.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
 	if err != nil {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return
@@ -266,7 +278,7 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	err = db.PlusTeamSize(dbPool, user.ID, -1)
+	err = db.PlusTeamSize(dbPool, user, -1)
 	if err != nil {
 		http.Error(w, "user minus", http.StatusBadRequest)
 		return

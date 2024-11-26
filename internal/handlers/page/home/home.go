@@ -14,7 +14,7 @@ import (
 type HomeData struct {
 	Team     []db.Character
 	TeamSize int
-	LoggedIn bool
+	topbar.TopbarData
 	CardData CardData // Data for the first card to be display
 }
 
@@ -76,17 +76,16 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	userAuth, err := auth.GetUser(r)
 	loggedIn := err == nil
 	team := []db.Character{}
-	user := db.User{}
+	var user db.User
 	if loggedIn {
-		user.ID = userAuth.UserID
-		err = db.SetUser(dbPool, &user)
+		// Get user
+		user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
 		if err != nil {
 			fmt.Println(err)
-			http.Error(w, "Can't get boxes", http.StatusInternalServerError)
-			return
+			http.Error(w, "Can't get user", http.StatusInternalServerError)
 		}
-
-		team, err = db.GetTeam(dbPool, user.ID)
+		// Get team
+		team, err = db.GetTeam(dbPool, user)
 		sort.Slice(
 			team,
 			func(i, j int) bool { return team[i].BoxIndex < team[j].BoxIndex },
@@ -116,10 +115,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	err = tmpl.ExecuteTemplate(w, "base.html",
 		HomeData{
 			// We use empty cards and page=-1 to display nothing but the loader of the first page
-			CardData: CardData{Page: -1},
-			Team:     team,
-			TeamSize: user.TeamSize,
-			LoggedIn: loggedIn,
+			CardData:   CardData{Page: -1},
+			Team:       team,
+			TeamSize:   user.TeamSize,
+			TopbarData: topbar.TopbarData{LoggedIn: loggedIn, Username: user.Username},
 		},
 	)
 	if err != nil {

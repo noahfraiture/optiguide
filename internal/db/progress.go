@@ -7,14 +7,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func ToggleProgress(db *pgxpool.Pool, userID string, cardID, boxIndex int) error {
+func ToggleProgress(db *pgxpool.Pool, user User, cardID, boxIndex int) error {
 	query :=
 		`INSERT INTO progress (user_id, card_id, box_index, done)
 		VALUES (@user_id, @card_id, @box_index, true)
 		ON CONFLICT (user_id, card_id, box_index)
 		DO UPDATE SET done = NOT progress.done;`
 	args := pgx.NamedArgs{
-		"user_id":   userID,
+		"user_id":   user.ID,
 		"card_id":   cardID,
 		"box_index": boxIndex,
 	}

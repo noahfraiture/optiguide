@@ -4,6 +4,11 @@ import (
 	"html/template"
 )
 
+type TopbarData struct {
+	LoggedIn bool
+	Username string
+}
+
 var FuncsTopbar = template.FuncMap{
 	"renderAuthButton": renderAuthButton,
 }

@@ -51,7 +51,14 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.ToggleProgress(dbPool, userAuth.UserID, cardID, boxIndex)
+	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusInternalServerError)
+		return
+	}
+
+	err = db.ToggleProgress(dbPool, user, cardID, boxIndex)
 	if err != nil {
 		fmt.Println("toggle error")
 		http.Error(w, "toggle progress", http.StatusBadRequest)
