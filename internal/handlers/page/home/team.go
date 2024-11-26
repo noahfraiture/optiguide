@@ -9,19 +9,6 @@ import (
 	"optiguide/internal/handlers"
 )
 
-var funcsTeam = template.FuncMap{
-	"className": className,
-	"nbClass":   func() int { return int(db.NB_CLASS) },
-	"add":       func(i, j int) int { return i + j },
-	"iterate": func(max int) []int {
-		r := make([]int, max)
-		for i := range max {
-			r[i] = i
-		}
-		return r
-	},
-}
-
 func SaveName(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	index, err := handlers.GetParameterInt(w, r, "index")

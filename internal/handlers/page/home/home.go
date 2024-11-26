@@ -53,16 +53,15 @@ var funcsHome = template.FuncMap{
 		}
 		return db.BoxesState{}
 	},
-	"map": handlers.RenderMap,
+	"map":       handlers.RenderMap,
+	"className": className,
+	"nbClass":   func() int { return int(db.NB_CLASS) },
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
 
 	funcs := funcsHome
 	for k, v := range topbar.FuncsTopbar {
-		funcs[k] = v
-	}
-	for k, v := range funcsTeam {
 		funcs[k] = v
 	}
 
