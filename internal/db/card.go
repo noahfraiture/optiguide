@@ -11,7 +11,11 @@ import (
 
 type Card struct {
 	parser.Card
-	Achievements []string // NOTE : override achievements in slice
+	// We override property modify them. string -> []string
+	Achievements []string
+	DungeonOne   []string
+	DungeonTwo   []string
+	DungeonThree []string
 }
 
 func insertCards(db *pgxpool.Pool, cards []parser.Card) error {
@@ -74,6 +78,9 @@ func GetCards(db *pgxpool.Pool, page int) ([]Card, error) {
 		return nil, err
 	}
 	var achievementsStr string
+	var dungeonOneStr string
+	var dungeonTwoStr string
+	var dungeonThreeStr string
 	for rows.Next() {
 		card := Card{}
 		err := rows.Scan(
@@ -84,16 +91,28 @@ func GetCards(db *pgxpool.Pool, page int) ([]Card, error) {
 			&card.TaskOne,
 			&card.TaskTwo,
 			&achievementsStr,
-			&card.DungeonOne,
-			&card.DungeonTwo,
-			&card.DungeonThree,
+			&dungeonOneStr,
+			&dungeonTwoStr,
+			&dungeonThreeStr,
 			&card.Spell,
 		)
-		card.Achievements = strings.Split(achievementsStr, "\n")
+
+		card.Achievements = listFromString(achievementsStr)
+		card.DungeonOne = listFromString(dungeonOneStr)
+		card.DungeonTwo = listFromString(dungeonTwoStr)
+		card.DungeonThree = listFromString(dungeonThreeStr)
 		if err != nil {
 			return nil, err
 		}
 		cards = append(cards, card)
 	}
 	return cards, nil
+}
+
+func listFromString(value string) []string {
+	if len(strings.TrimSpace(value)) == 0 {
+		return []string{}
+	} else {
+		return strings.Split(strings.TrimSpace(value), "\n")
+	}
 }
