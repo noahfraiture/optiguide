@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -176,7 +177,7 @@ func UpdateCharacterClass(dbPool *pgxpool.Pool, user User, boxIndex int, class C
 		"user_id":   user.ID,
 		"box_index": boxIndex,
 		"class":     class,
-		"name":      ClassToName[class],
+		"name":      fmt.Sprintf("Perso %d", boxIndex+1),
 	})
 	return err
 }
