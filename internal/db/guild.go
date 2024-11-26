@@ -12,7 +12,7 @@ import (
 )
 
 type GuildUser struct {
-	Email    string
+	Username string
 	TeamSize int
 	Progress float64
 }
@@ -36,7 +36,7 @@ func GetGuild(dbPool *pgxpool.Pool, user User) ([]Guild, error) {
 		)
 		SELECT
 			users.team_size,
-			users.email,
+			users.username,
 			ROUND(users.progress::numeric, 2),
 			guild.name,
 			guild.id
@@ -56,7 +56,7 @@ func GetGuild(dbPool *pgxpool.Pool, user User) ([]Guild, error) {
 		var guildID uuid.UUID
 		err = rows.Scan(
 			&user.TeamSize,
-			&user.Email,
+			&user.Username,
 			&user.Progress,
 			&guildName,
 			&guildID,

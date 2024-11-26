@@ -47,6 +47,9 @@ func main() {
 	http.HandleFunc("/auth/google/callback", user.GoogleCallback)
 	http.HandleFunc("/logout", user.Logout)
 
+	http.HandleFunc("/user/edit-name", user.EditName)
+	http.HandleFunc("/user/save-name", user.SaveName)
+
 	// FIXME : needed to have tailwindcss
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
