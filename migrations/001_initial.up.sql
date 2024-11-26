@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS users (
   provider TEXT NOT NULL,
   username TEXT NOT NULL,
   email TEXT,
-  team_size INTEGER NOT NULL
+  team_size INTEGER NOT NULL,
+  progress FLOAT NOT NULL,
+  UNIQUE (provider_id, provider)
 );
 
 -- Users characters

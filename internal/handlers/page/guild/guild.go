@@ -40,7 +40,7 @@ func Guild(w http.ResponseWriter, r *http.Request) {
 	var guilds []db.Guild
 	if loggedIn {
 		// Get user
-		user, err = db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+		user, err = db.GetUserFromProvider(dbPool, userAuth)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Error fetching guild", http.StatusInternalServerError)
@@ -93,7 +93,7 @@ func GuildSearch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get user", http.StatusUnauthorized)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)
@@ -137,7 +137,7 @@ func GuildCreate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get db in guild create", http.StatusBadRequest)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)
@@ -189,7 +189,7 @@ func GuildCreate(w http.ResponseWriter, r *http.Request) {
 		Users: []db.GuildUser{{
 			Email:    user.Email,
 			TeamSize: user.TeamSize,
-			Progress: 0,
+			Progress: user.Progress,
 		}},
 	})
 	if err != nil {
@@ -216,7 +216,7 @@ func GuildJoin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get db in guild create", http.StatusBadRequest)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)
@@ -248,7 +248,7 @@ func GuildLeave(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get db in guild create", http.StatusBadRequest)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)

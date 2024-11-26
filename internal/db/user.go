@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/markbates/goth"
 )
 
 type User struct {
@@ -15,36 +16,43 @@ type User struct {
 	Username   string
 	Email      string
 	TeamSize   int
+	// percentage of progress of the user.
+	// This is used when create a new guild to display correct information without
+	// make another request
+	Progress float64
 }
 
-func GetUserFromProvider(dbPool *pgxpool.Pool, provider, providerID string) (User, error) {
-	user := User{ProviderID: providerID, Provider: provider}
+func GetUserFromProvider(dbPool *pgxpool.Pool, userAuth goth.User) (User, error) {
+	user := User{
+		ProviderID: userAuth.UserID,
+		Provider:   userAuth.Provider,
+		Email:      userAuth.Email,
+		Username:   userAuth.NickName,
+	}
 	err := setUserFromProvider(dbPool, &user)
 	return user, err
 }
 
 // Insert the user and set its email, team_size and username
 func setUserFromProvider(dbPool *pgxpool.Pool, user *User) error {
-	query := `WITH inputs(id, provider_id, provider, username, email, team_size) AS (
-		VALUES (@id::uuid, @provider_id::text, @provider::text, @username::text, @email::text, 1::integer)
-	), ins_user AS (
-		INSERT INTO users(id, provider_id, provider, username, email, team_size)
-		SELECT * FROM inputs
-		ON CONFLICT (id) DO NOTHING
-		RETURNING id, provider_id, provider, username, email, team_size
+	query := `WITH ins_user AS (
+		INSERT INTO users(id, provider_id, provider, username, email, team_size, progress)
+		VALUES (@id, @provider_id, @provider, @username, @email, 1, 0.0)
+		ON CONFLICT (provider, provider_id) DO NOTHING
+		RETURNING id, provider_id, provider, username, email, team_size, progress
 	), ins_team AS (
 		INSERT INTO user_characters(user_id, box_index, class, name)
 		SELECT id, 0, @class, @name FROM ins_user
 		ON CONFLICT (user_id, box_index) DO NOTHING
 	), existing AS (
-		SELECT id, provider_id, provider, username, email, team_size
+		SELECT id, provider_id, provider, username, email, team_size, progress
 		FROM users
-		WHERE id = @id
+		WHERE provider_id = @provider_id AND provider = @provider
 	)
-	SELECT id, username, email, team_size
+	SELECT id, username, email, team_size, ROUND(progress::numeric, 2)
 	FROM ins_user
 	UNION
-	SELECT id, username, email, team_size
+	SELECT id, username, email, team_size, ROUND(progress::numeric, 2)
 	FROM existing;`
 
 	args := pgx.NamedArgs{
@@ -57,14 +65,25 @@ func setUserFromProvider(dbPool *pgxpool.Pool, user *User) error {
 		"name":        "Perso 1",
 	}
 	row := dbPool.QueryRow(context.Background(), query, args)
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.TeamSize)
+	err := row.Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.TeamSize,
+		&user.Progress,
+	)
 	return err
 }
 
 func PlusTeamSize(dbPool *pgxpool.Pool, user User, value int) error {
 	_, err := dbPool.Exec(
 		context.Background(),
-		`UPDATE users SET team_size = users.team_size + @value WHERE id = @id;`,
+		`UPDATE users
+		SET
+		  progress = users.progress * users.team_size / (users.team_size + @value),
+		  team_size = users.team_size + @value
+		WHERE
+		  id = @id;`,
 		pgx.NamedArgs{
 			"id":    user.ID,
 			"value": value,

@@ -38,7 +38,7 @@ func About(w http.ResponseWriter, r *http.Request) {
 	loggedIn := err == nil
 	var user db.User
 	if loggedIn {
-		user, err = db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+		user, err = db.GetUserFromProvider(dbPool, userAuth)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Error fetching guild", http.StatusInternalServerError)
@@ -105,7 +105,7 @@ func SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to get user", http.StatusUnauthorized)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)

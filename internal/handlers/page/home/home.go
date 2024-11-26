@@ -58,6 +58,7 @@ var funcsHome = template.FuncMap{
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
+
 	funcs := funcsHome
 	for k, v := range topbar.FuncsTopbar {
 		funcs[k] = v
@@ -79,7 +80,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	var user db.User
 	if loggedIn {
 		// Get user
-		user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+		user, err = db.GetUserFromProvider(dbPool, userAuth)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Can't get user", http.StatusInternalServerError)
