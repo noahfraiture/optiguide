@@ -14,12 +14,6 @@ type Card struct {
 	Achievements []string // NOTE : override achievements in slice
 }
 
-func deleteCards(db *pgxpool.Pool) error {
-	query := "DELETE FROM cards;"
-	_, err := db.Exec(context.Background(), query)
-	return err
-}
-
 func insertCards(db *pgxpool.Pool, cards []parser.Card) error {
 	rows := [][]any{}
 	for _, card := range cards {

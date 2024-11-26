@@ -54,14 +54,14 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 		http.Error(w, "Can't get cards", http.StatusInternalServerError)
 		return
 	}
-	boxes, err := db.GetRenderBoxByCards(dbPool, user.ID)
+	boxes, err := db.GetRenderBoxByCards(dbPool, user)
 	if err != nil {
 		fmt.Printf("Can't get boxes %s\n", err)
 		http.Error(w, "Can't get boxes", http.StatusInternalServerError)
 		return
 	}
 
-	team, err := db.GetTeam(dbPool, user.ID)
+	team, err := db.GetTeam(dbPool, user)
 	if err != nil {
 		fmt.Println("Can't get team", err)
 		http.Error(w, "Can't get team", http.StatusInternalServerError)

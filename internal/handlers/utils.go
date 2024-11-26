@@ -76,12 +76,12 @@ func GetUser(w http.ResponseWriter, r *http.Request) (db.User, error) {
 		http.Error(w, "Can't get db to get user", http.StatusInternalServerError)
 		return db.User{}, err
 	}
-	userSesssion, err := auth.GetUser(r)
+	userAuth, err := auth.GetUser(r)
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		return db.User{}, nil
 	}
-	user, err := db.GetUser(dbPool, userSesssion.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
 	if err != nil {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return db.User{}, nil
