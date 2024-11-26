@@ -10,3 +10,5 @@ DROP TABLE users;
 DROP TABLE user_guilds;
 
 DROP TABLE guilds;
+
+DROP TABLE feedbacks;

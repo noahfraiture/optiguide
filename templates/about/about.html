@@ -1,0 +1,52 @@
+{{ define "body" }}
+<div class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
+  <section class="w-full max-w-3xl">
+    <div class="bg-white shadow-lg rounded-lg p-8 mb-8">
+      <h2 class="text-3xl font-bold mb-6 text-green-700">About This Project</h2>
+      <p class="text-lg text-gray-700 leading-relaxed">
+        Hello, ce site est basé sur le travail de Skyzio et reprend le guide qu'il a fait, mais sous format de site. En
+        plus, il intègre des fonctionnalités comme les guildes ou la gestion de plusieurs personnages. Le site est
+        encore en amélioration, et je serais super content d'avoir vos avis ! Que ce soit positif, négatif, constructif
+        ou quoi que ce soit. Aussi, si vous êtes dev, UI/UX designer ou si vous avez une quelconque compétence qui peut
+        rendre ce site meilleur, n'hésitez pas à me contacter à <a href="mailto:contact@optiguide.dev" target="_blank"
+          class="text-green-600 hover:underline">contact@optiguide.dev</a>. <a
+          href="https://github.com/noahfraiture/optiguide" target="_blank" class="text-green-600 hover:underline">Check
+          out the project on GitHub</a>.
+      </p>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg p-8">
+      <h3 class="text-2xl font-semibold mb-6 text-green-700">Avis</h3>
+      {{ block "feedback-form" . }}{{ end }}
+    </div>
+  </section>
+</div>
+{{ end }}
+
+{{ define "feedback-form" }}
+<form id="feedback-form" hx-post="/about/submit-feedback" hx-swap="beforeend" hx-target="#alerts"
+  hx-on::after-request="this.reset()">
+  <textarea id="feedback-text" name="feedback" placeholder="Ecrivez votre avis ici..."
+    class="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 mb-6 text-lg"
+    required></textarea>
+  <button type="submit"
+    class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-lg">Envoyer</button>
+</form>
+
+<div id="alerts" class="fixed inset-x-0 top-0 flex flex-col items-center z-50">
+</div>
+{{ end }}
+
+{{ define "feedback-success" }}
+<div id="alert" hx-on:htmx:load="setTimeout(() => this.remove(), 3000)"
+  class="bg-green-100 border-t-4 border-green-500 rounded-b text-green-900 px-4 py-3 shadow-md mb-4" role="alert">
+  <p>Votre avis a bien été envoyé, merci !</p>
+</div>
+{{ end }}
+
+{{ define "feedback-fail" }}
+<div id="alert" hx-on:htmx:load="setTimeout(() => this.remove(), 3000)"
+  class="bg-red-100 border-t-4 border-red-500 rounded-b text-red-900 px-4 py-3 shadow-md mb-4" role="alert">
+  <p>Votre message est incorrect ou vide !</p>
+</div>
+{{ end }}
