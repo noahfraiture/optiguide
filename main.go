@@ -7,6 +7,7 @@ import (
 
 	"optiguide/internal/auth"
 	"optiguide/internal/db"
+	"optiguide/internal/handlers/page/about"
 	"optiguide/internal/handlers/page/guild"
 	"optiguide/internal/handlers/page/home"
 	"optiguide/internal/handlers/user"
@@ -29,6 +30,10 @@ func main() {
 	http.HandleFunc("/team/save-name", home.SaveName)
 	http.HandleFunc("/card", home.RenderCard)
 	http.HandleFunc("/card/toggle", user.Toggle)
+
+	// About
+	http.HandleFunc("/about", about.About)
+	http.HandleFunc("/about/submit-feedback", about.SubmitFeedback)
 
 	// Guild
 	http.HandleFunc("/guild", guild.Guild)

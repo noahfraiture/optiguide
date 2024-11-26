@@ -53,3 +53,13 @@ CREATE TABLE IF NOT EXISTS user_guilds (
   guild_id UUID REFERENCES guilds (id) ON DELETE CASCADE,
   PRIMARY KEY (user_id, guild_id)
 );
+
+-- feedback
+CREATE TABLE feedbacks (
+  id SERIAL PRIMARY KEY,
+  content TEXT NOT NULL,
+  user_id TEXT REFERENCES users (id) ON DELETE SET NULL,
+  created_at TIMESTAMP
+  WITH
+    TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
