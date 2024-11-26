@@ -2,11 +2,75 @@ package user
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"optiguide/internal/auth"
 	"optiguide/internal/db"
+	topbar "optiguide/internal/handlers/page"
 	"strconv"
 )
+
+func EditName(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.
+		New("edit-name").
+		Funcs(topbar.FuncsTopbar).
+		ParseFiles("templates/topbar.html")
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "template parsing error", http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "edit-name", nil)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "template execution error", http.StatusInternalServerError)
+		return
+	}
+}
+func SaveName(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	dbPool, err := db.GetPool()
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get db", http.StatusBadRequest)
+		return
+	}
+	userAuth, err := auth.GetUser(r)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusUnauthorized)
+		return
+	}
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusInternalServerError)
+		return
+	}
+	err = db.UpdateUsername(dbPool, user, name)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "cna't update username", http.StatusInternalServerError)
+		return
+	}
+	user.Username = name
+	tmpl, err := template.
+		New("name").
+		Funcs(topbar.FuncsTopbar).
+		ParseFiles("templates/topbar.html")
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "template parsing error", http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "name", user)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "template execution error", http.StatusInternalServerError)
+		return
+	}
+
+}
 
 func Toggle(w http.ResponseWriter, r *http.Request) {
 	userAuth, err := auth.GetUser(r)

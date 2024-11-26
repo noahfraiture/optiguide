@@ -187,7 +187,7 @@ func GuildCreate(w http.ResponseWriter, r *http.Request) {
 		Name: name,
 		ID:   guildID,
 		Users: []db.GuildUser{{
-			Email:    user.Email,
+			Username: user.Username,
 			TeamSize: user.TeamSize,
 			Progress: user.Progress,
 		}},

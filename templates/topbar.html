@@ -1,3 +1,4 @@
+{{ define "topbar" }}
 <div class="bg-green-600 text-white p-4 shadow-md">
   <div class="container mx-auto flex justify-between items-center">
     <div class="flex items-center space-x-4">
@@ -6,9 +7,32 @@
       <a href="/guild" class="px-4 py-2 bg-green-700 rounded-lg hover:bg-green-800 transition">Guildes</a>
       <a href="/about" class="px-4 py-2 bg-green-700 rounded-lg hover:bg-green-800 transition">About</a>
     </div>
-    {{ .Username }}
+    <div id="name" class="flex items-center">
+      {{ if .LoggedIn }}
+      {{ block "name" . }}{{ end }}
+      {{ end }}
+    </div>
     <div>
       {{ renderAuthButton .LoggedIn }}
     </div>
   </div>
 </div>
+{{ end }}
+
+{{ define "name" }}
+<div id="name" hx-target="#name" hx-post="/user/edit-name" hx-swap="outerHTML" class="flex items-center space-x-2">
+  <span class="text-lg font-semibold">{{ .Username }}</span>
+  <button hx-get="/user/edit-name"
+    class="px-2 py-1 bg-green-700 hover:bg-green-800 text-sm rounded transition">Edit</button>
+</div>
+{{ end }}
+
+{{ define "edit-name" }}
+<div id="name" class="flex items-center space-x-2">
+  <input type="text" name="name" hx-post="/user/save-name" hx-swap="outerHTML" hx-target="#name"
+    placeholder="{{ .Username }}"
+    class="px-3 py-2 rounded-lg bg-white text-black focus:outline-none focus:ring-2 focus:ring-green-600" autofocus />
+  <button hx-post="/user/save-name" hx-target="#name"
+    class="px-2 py-1 bg-green-700 hover:bg-green-800 text-sm rounded transition">Save</button>
+</div>
+{{ end }}

@@ -75,6 +75,20 @@ func setUserFromProvider(dbPool *pgxpool.Pool, user *User) error {
 	return err
 }
 
+func UpdateUsername(dbPool *pgxpool.Pool, user User, username string) error {
+	_, err := dbPool.Exec(
+		context.Background(),
+		`UPDATE users
+		SET username = @username
+		WHERE id = @id;`,
+		pgx.NamedArgs{
+			"username": username,
+			"id":       user.ID,
+		},
+	)
+	return err
+}
+
 func PlusTeamSize(dbPool *pgxpool.Pool, user User, value int) error {
 	_, err := dbPool.Exec(
 		context.Background(),
