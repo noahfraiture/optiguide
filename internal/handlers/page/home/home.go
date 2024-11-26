@@ -53,8 +53,7 @@ var funcsHome = template.FuncMap{
 		}
 		return db.BoxesState{}
 	},
-	"renderIcon": renderIcon,
-	"map":        handlers.RenderMap,
+	"map": handlers.RenderMap,
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {

@@ -10,11 +10,9 @@ import (
 )
 
 var funcsTeam = template.FuncMap{
-	"renderIcon": renderIcon,
-	"renderName": renderName,
-	"className":  className,
-	"nbClass":    func() int { return int(db.NB_CLASS) },
-	"add":        func(i, j int) int { return i + j },
+	"className": className,
+	"nbClass":   func() int { return int(db.NB_CLASS) },
+	"add":       func(i, j int) int { return i + j },
 	"iterate": func(max int) []int {
 		r := make([]int, max)
 		for i := range max {
@@ -22,33 +20,6 @@ var funcsTeam = template.FuncMap{
 		}
 		return r
 	},
-}
-
-// Here we render HTML via a function instead of a box to be able to encapsulate
-// it in a hx-swap-oob in PickCharacter
-func renderIcon(class any) template.HTML {
-	var i int
-	switch v := class.(type) {
-	case int:
-		i = v
-	case db.Class:
-		i = int(v)
-	default:
-		return ""
-	}
-	return template.HTML(fmt.Sprintf(`<img src="/static/images/%[1]s.avif" alt=%[1]s class="inline-block h-6 w-6 mr-2">`,
-		db.ClassToName[db.Class(i)],
-	))
-}
-
-// Return a div containing the name. Click on it will make a request to get a
-// editable name ox
-func renderName(name string, index int) template.HTML {
-	return template.HTML(fmt.Sprintf(
-		`<div hx-post="/team/editable-name?name=%[1]s&index=%[2]d" hx-swap="outerHTML">%[1]s</div>`,
-		name,
-		index,
-	))
 }
 
 func SaveName(w http.ResponseWriter, r *http.Request) {
@@ -80,24 +51,24 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		http.Error(w, "can't update char", http.StatusBadRequest)
 	}
-	nameHTML := renderName(name, index)
-	tmpl := fmt.Sprintf(
-		`<div hx-swap-oob="outerHTML" id="name-%[1]d">%[2]s</div>`,
-		index,
-		nameHTML,
-	)
-	_, err = w.Write([]byte(tmpl))
+	tmpl, err := template.
+		New("swap-name").
+		Funcs(funcsHome).
+		ParseFiles("templates/home/team.html")
 	if err != nil {
-		http.Error(w, "failed to write response", http.StatusInternalServerError)
+		fmt.Println(err)
+		http.Error(w, "template parsing error", http.StatusInternalServerError)
+		return
 	}
-}
-
-func renderEditableName(name string, index int) template.HTML {
-	return template.HTML(fmt.Sprintf(
-		`<input type="text" placeholder="%[1]s" name="name" hx-post="/team/save-name?index=%[2]d" hx-swap="outerHTML" class="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hover:bg-green-700 transition" autofocus />`,
-		name,
-		index,
-	))
+	err = tmpl.ExecuteTemplate(w, "swap-name", map[string]any{
+		"Index": index,
+		"Name":  name,
+	})
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "template execution error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func RenderEditableName(w http.ResponseWriter, r *http.Request) {
@@ -109,10 +80,23 @@ func RenderEditableName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	tmpl := renderEditableName(name, index)
-	_, err = w.Write([]byte(tmpl))
+	tmpl, err := template.
+		New("editable-name").
+		Funcs(funcsHome).
+		ParseFiles("templates/home/team.html")
 	if err != nil {
-		http.Error(w, "failed to write response", http.StatusInternalServerError)
+		fmt.Println(err)
+		http.Error(w, "template parsing error", http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "editable-name", map[string]any{
+		"Index": index,
+		"Name":  name,
+	})
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "template execution error", http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -163,16 +147,22 @@ func PickCharacter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	iconHTML := renderIcon(db.Class(class))
-	tmpl := fmt.Sprintf(
-		`<div hx-swap-oob="outerHTML" id="icon-%[1]d">%[2]s</div>`,
-		index,
-		iconHTML,
-	)
-	_, err = w.Write([]byte(tmpl))
+	tmpl, err := template.
+		New("swap-icon").
+		Funcs(funcsHome).
+		ParseFiles("templates/home/team.html")
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		http.Error(w, "template parsing error", http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "swap-icon", map[string]any{
+		"Class": db.Class(class),
+		"Index": index,
+	})
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "template execution error", http.StatusInternalServerError)
 		return
 	}
 }
@@ -284,11 +274,19 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.TeamSize -= 1
-	tmpl := fmt.Sprintf(`<div hx-swap-oob="delete" id="character-box-%d"></div>`, user.TeamSize)
-	_, err = w.Write([]byte(tmpl))
+	tmpl, err := template.
+		New("delete-character").
+		Funcs(funcsHome).
+		ParseFiles("templates/home/team.html")
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		http.Error(w, "template parsing error", http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "delete-character", user.TeamSize)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "template execution error", http.StatusInternalServerError)
 		return
 	}
 }
