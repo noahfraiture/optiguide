@@ -4,7 +4,7 @@
 
   {{ block "team" . }}{{ end }}
 
-  <div id="card-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div id="card-container" class="flex flex-col gap-6">
     <!-- Call the first page of cards -->
     {{ block "cards" .CardData }}{{ end }}
   </div>

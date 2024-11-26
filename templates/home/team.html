@@ -99,7 +99,8 @@
 {{ end }}
 
 {{ define "character-icon" }}
-<img src="/static/images/{{ className . }}.avif" alt="{{ className . }}" class="inline-block h-6 w-6 mr-2">
+<img src="/static/images/{{ className . }}.avif" alt="{{ className . }}"
+  class="inline-block max-w-full max-h-full object-contain h-6 w-6 mr-2">
 {{ end }}
 
 {{ define "swap-icon" }}
