@@ -40,7 +40,7 @@ func SaveUser(dbpool *pgxpool.Pool, user goth.User, w http.ResponseWriter, r *ht
 	if err != nil {
 		return err
 	}
-	_, err = db.GetUserFromProvider(dbpool, user.Provider, user.UserID)
+	_, err = db.GetUserFromProvider(dbpool, user)
 	return err
 }
 

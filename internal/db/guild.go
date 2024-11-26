@@ -37,16 +37,7 @@ func GetGuild(dbPool *pgxpool.Pool, user User) ([]Guild, error) {
 		SELECT
 			users.team_size,
 			users.email,
-			ROUND(
-				(
-					SELECT COUNT(*)
-					FROM progress
-					WHERE progress.user_id = users.id
-						AND progress.box_index < users.team_size
-						AND progress.done = TRUE
-				) * 100.0 / (SELECT COUNT(*) * users.team_size FROM cards),
-				2
-			),
+			ROUND(users.progress::numeric, 2),
 			guild.name,
 			guild.id
 		FROM guild

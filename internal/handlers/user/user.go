@@ -51,7 +51,7 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)

@@ -69,7 +69,7 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get user", http.StatusUnauthorized)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)
@@ -150,7 +150,7 @@ func PickCharacter(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't get db", http.StatusBadRequest)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)
@@ -197,7 +197,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusUnauthorized)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "can't get user", http.StatusInternalServerError)
@@ -269,7 +269,7 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusUnauthorized)
 		return
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return

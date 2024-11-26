@@ -81,7 +81,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) (db.User, error) {
 		http.Error(w, "", http.StatusBadRequest)
 		return db.User{}, nil
 	}
-	user, err := db.GetUserFromProvider(dbPool, userAuth.Provider, userAuth.UserID)
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
 	if err != nil {
 		http.Error(w, "error for user", http.StatusBadRequest)
 		return db.User{}, nil
