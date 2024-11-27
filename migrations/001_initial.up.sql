@@ -1,6 +1,7 @@
 -- Cards
 CREATE TABLE IF NOT EXISTS cards (
   id INTEGER PRIMARY KEY,
+  idx INTEGER UNIQUE NULL NOT DISTINCT,
   level INTEGER NOT NULL,
   info TEXT,
   task_merge BOOLEAN,

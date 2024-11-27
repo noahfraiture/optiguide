@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func ToggleProgress(db *pgxpool.Pool, user User, cardID, boxIndex int) error {
+func ToggleProgress(db *pgxpool.Pool, user User, cardIndex, boxIndex int) error {
 	// Start the transaction
 	tx, err := db.Begin(context.Background())
 	if err != nil {
@@ -21,9 +21,11 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardID, boxIndex int) error {
 	}()
 
 	queryUpsert := `
-    WITH upsert AS (
+	WITH card AS (
+		SELECT * FROM cards WHERE idx = @card_index
+	), upsert AS (
         INSERT INTO progress (user_id, card_id, box_index, done)
-        VALUES (@user_id, @card_id, @box_index, true)
+        VALUES (@user_id, card.card_id, @box_index, true)
         ON CONFLICT (user_id, card_id, box_index)
         DO UPDATE SET done = NOT progress.done
         RETURNING done
@@ -32,9 +34,9 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardID, boxIndex int) error {
 
 	var newDoneValue bool
 	err = tx.QueryRow(context.Background(), queryUpsert, pgx.NamedArgs{
-		"user_id":   user.ID,
-		"card_id":   cardID,
-		"box_index": boxIndex,
+		"user_id":    user.ID,
+		"card_index": cardIndex,
+		"box_index":  boxIndex,
 	}).Scan(&newDoneValue)
 	if err != nil {
 		return fmt.Errorf("error toggling progress: %w", err)
@@ -45,13 +47,13 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardID, boxIndex int) error {
 	    WHEN @done THEN 100.0 / (
 			SELECT COUNT(*) * users.team_size
 			FROM cards, users
-			WHERE users.id = @user_id
+			WHERE users.id = @user_id AND cards.idx IS NOT NULL
 			GROUP BY users.team_size
 	    )
 	    ELSE -100.0 / (
 			SELECT COUNT(*) * users.team_size
 			FROM cards, users
-			WHERE users.id = @user_id
+			WHERE users.id = @user_id AND cards.idx IS NOT NULL
 			GROUP BY users.team_size
 	    )
 		END AS change;`

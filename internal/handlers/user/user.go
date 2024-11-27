@@ -81,16 +81,16 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	card := r.URL.Query().Get("card")
-	if card == "" {
-		msg := fmt.Sprintf("No card ID: %s", card)
+	cardStr := r.URL.Query().Get("card")
+	if cardStr == "" {
+		msg := fmt.Sprintf("No card index: %s", cardStr)
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
-	cardID, err := strconv.Atoi(card)
+	cardIndex, err := strconv.Atoi(cardStr)
 	if err != nil {
-		msg := fmt.Sprintf("Invalid card ID: %s", card)
+		msg := fmt.Sprintf("Invalid card ID: %s", cardStr)
 		fmt.Println(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
@@ -122,7 +122,7 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.ToggleProgress(dbPool, user, cardID, boxIndex)
+	err = db.ToggleProgress(dbPool, user, cardIndex, boxIndex)
 	if err != nil {
 		fmt.Println("toggle error")
 		http.Error(w, "toggle progress", http.StatusBadRequest)

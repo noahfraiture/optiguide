@@ -232,11 +232,10 @@ type BoxesState map[int]bool
 // We only need the done status of a box because we only need the class &
 // name once, when we get the whole team
 func GetRenderBoxByCards(dbPool *pgxpool.Pool, user User) (map[int]BoxesState, error) {
-	// We can't make a LEFT JOIN to have `done` as false for a default value
-	// Because we can't know `card_id`
 	query :=
-		`SELECT card_id, box_index, done
+		`SELECT cards.idx, box_index, done
 		FROM progress
+		JOIN cards on cards.id = progress.card_id
 		WHERE user_id = @user_id;`
 	args := pgx.NamedArgs{
 		"user_id": user.ID,
@@ -250,15 +249,15 @@ func GetRenderBoxByCards(dbPool *pgxpool.Pool, user User) (map[int]BoxesState, e
 	for rows.Next() {
 		var done bool
 		var box_index int
-		var card_id int
-		err = rows.Scan(&card_id, &box_index, &done)
+		var card_idx int
+		err = rows.Scan(&card_idx, &box_index, &done)
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := cardBoxes[card_id]; !ok {
-			cardBoxes[card_id] = make(BoxesState)
+		if _, ok := cardBoxes[card_idx]; !ok {
+			cardBoxes[card_idx] = make(BoxesState)
 		}
-		cardBoxes[card_id][box_index] = done
+		cardBoxes[card_idx][box_index] = done
 	}
 	return cardBoxes, nil
 }
