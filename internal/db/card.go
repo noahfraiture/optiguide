@@ -23,6 +23,7 @@ func insertCards(db *pgxpool.Pool, cards []parser.Card) error {
 	for _, card := range cards {
 		rows = append(rows, []any{
 			card.ID,
+			card.Idx,
 			card.Level,
 			card.Info,
 			card.TaskMerge,
@@ -37,6 +38,7 @@ func insertCards(db *pgxpool.Pool, cards []parser.Card) error {
 	}
 	_, err := db.CopyFrom(context.Background(), pgx.Identifier{"cards"}, []string{
 		"id",
+		"idx",
 		"level",
 		"info",
 		"task_merge",
@@ -55,6 +57,7 @@ func GetCards(db *pgxpool.Pool, page int) ([]Card, error) {
 	const PAGESIZE = 10
 	query := `SELECT
 		id,
+		idx,
 		level,
 		info,
 		task_merge,
@@ -67,7 +70,7 @@ func GetCards(db *pgxpool.Pool, page int) ([]Card, error) {
 		spell
 		FROM cards
 		WHERE id >= @lo AND id < @hi
-		ORDER BY id;`
+		ORDER BY idx;`
 	args := pgx.NamedArgs{
 		"lo": page * PAGESIZE,
 		"hi": (page + 1) * PAGESIZE,
@@ -85,6 +88,7 @@ func GetCards(db *pgxpool.Pool, page int) ([]Card, error) {
 		card := Card{}
 		err := rows.Scan(
 			&card.ID,
+			&card.Idx,
 			&card.Level,
 			&card.Info,
 			&card.TaskMerge,

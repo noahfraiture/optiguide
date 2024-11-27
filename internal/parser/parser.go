@@ -11,6 +11,7 @@ import (
 // Currently this is string because of database library hard to understand
 type Card struct {
 	ID           int
+	Idx          int
 	Level        int
 	Info         string
 	TaskMerge    bool
@@ -96,6 +97,7 @@ func Parse(fileName string) ([]Card, error) {
 
 		cards = append(cards, Card{
 			ID:           step_number,
+			Idx:          step_number,
 			Level:        level,
 			Info:         info,
 			TaskMerge:    row.Cells[6].HMerge == 2,

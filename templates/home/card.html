@@ -1,9 +1,9 @@
 {{ define "cards" }}
 {{ range .Cards }}
-<div id="card-container-{{ .ID }}" class="bg-white p-6 shadow-md rounded-lg border border-gray-200 mb-6 w-full">
+<div id="card-container-{{ .Index }}" class="bg-white p-6 shadow-md rounded-lg border border-gray-200 mb-6 w-full">
   <div>
     <h1 class="text-left absolute text-xl font-semibold text-green-700 mb-4">Niveau {{ .Level }}</h1>
-    <h1 class="text-center text-xl font-semibold text-green-700 mb-4">Etape {{ add .ID 1 }}</h1>
+    <h1 class="text-center text-xl font-semibold text-green-700 mb-4">Etape {{ .Index }}</h1>
   </div>
 
   <!-- Task Section -->
@@ -14,110 +14,111 @@
       <h3 class="font-medium text-green-700">Tâche:</h3>
       <p>{{ .TaskOne }}</p>
     </div>
-  {{ else }}
+    {{ else }}
     <!-- If there's two task, we make a three column -->
-  <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-4">
-    <div class="bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer mb-4">
-      <h3 class="font-medium text-green-700">Route Bonta:</h3>
-      <p>{{ .TaskOne }}</p>
-    </div>
-    <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer mb-4">
-      <h3 class="font-medium text-green-700">Route Brakmar:</h3>
-      <p>{{ .TaskTwo }}</p>
-    </div>
-    {{ end }}
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-4">
+      <div class="bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer mb-4">
+        <h3 class="font-medium text-green-700">Route Bonta:</h3>
+        <p>{{ .TaskOne }}</p>
+      </div>
+      <div class="flex-1 bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer mb-4">
+        <h3 class="font-medium text-green-700">Route Brakmar:</h3>
+        <p>{{ .TaskTwo }}</p>
+      </div>
+      {{ end }}
 
-    <!-- Info Section -->
-    {{ if .Info }}
-    <div class="flex items-center justify-center space-x-4 text-gray-600 text-sm mb-4">
-      <span>Info: {{ .Info }}</span>
+      <!-- Info Section -->
+      {{ if .Info }}
+      <div class="flex items-center justify-center space-x-4 text-gray-600 text-sm mb-4">
+        <span>Info: {{ .Info }}</span>
+      </div>
+      {{ end }}
     </div>
-    {{ end }}
-  </div>
 
-  <!-- Dungeons and Achievements -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+    <!-- Dungeons and Achievements -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-      {{ if or .DungeonOne .DungeonTwo .DungeonThree }}
-      <div class="mb-4">
-        <h3 class="font-bold text-gray-700">Donjons:</h3>
-        <div>
-          {{ if .DungeonOne }}
-          <h4 class="font-semibold text-gray-600">Tour du monde:</h4>
-          {{ range .DungeonOne }}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+        {{ if or .DungeonOne .DungeonTwo .DungeonThree }}
+        <div class="mb-4">
+          <h3 class="font-bold text-gray-700">Donjons:</h3>
+          <div>
+            {{ if .DungeonOne }}
+            <h4 class="font-semibold text-gray-600">Tour du monde:</h4>
+            {{ range .DungeonOne }}
+            <p class="text-gray-600">- {{ . }}</p>
+            {{ end }}
+            {{ end }}
+            {{ if .DungeonTwo }}
+            <h4 class="font-semibold text-gray-600">Tornade des donjons:</h4>
+            {{ range .DungeonTwo }}
+            <p class="text-gray-600">- {{ . }}</p>
+            {{ end }}
+            {{ end }}
+            {{ if .DungeonThree }}
+            <h4 class="font-semibold text-gray-600">Autre donjons:</h4>
+            {{ range .DungeonThree }}
+            <p class="text-gray-600">- {{ . }}</p>
+            {{ end }}
+            {{ end }}
+          </div>
+        </div>
+        {{ end }}
+        {{ if .Achievements }}
+        <div class="mb-4">
+          <h3 class="font-bold text-gray-700">Succès:</h3>
+          {{ range .Achievements }}
           <p class="text-gray-600">- {{ . }}</p>
           {{ end }}
-          {{ end }}
-          {{ if .DungeonTwo }}
-          <h4 class="font-semibold text-gray-600">Tornade des donjons:</h4>
-          {{ range .DungeonTwo }}
-          <p class="text-gray-600">- {{ . }}</p>
-          {{ end }}
-          {{ end }}
-          {{ if .DungeonThree }}
-          <h4 class="font-semibold text-gray-600">Autre donjons:</h4>
-          {{ range .DungeonThree }}
-          <p class="text-gray-600">- {{ . }}</p>
-          {{ end }}
+        </div>
+        {{ end }}
+      </div>
+
+      <!-- Character Boxes -->
+      <div>
+        <h3 class="font-bold text-gray-700 mb-4">Personnages:</h3>
+        <div id="character-boxes-{{ .Index }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {{ $boxState := boxAtCard $.BoxesState .Card.Index }}
+          {{ $cardIndex := .Card.Index }}
+          {{ range $boxIndex := iterate $.Size }}
+          {{ block "box" (map "CardIndex" $cardIndex "BoxIndex" $boxIndex "Done" (doneAtIndex $boxState $boxIndex) "Character"
+          (characterAtIndex $.Team $boxIndex)) }}{{ end }}
           {{ end }}
         </div>
       </div>
-      {{ end }}
-      {{ if .Achievements }}
-      <div class="mb-4">
-        <h3 class="font-bold text-gray-700">Succès:</h3>
-        {{ range .Achievements }}
-        <p class="text-gray-600">- {{ . }}</p>
-        {{ end }}
-      </div>
-      {{ end }}
+
     </div>
 
-    <!-- Character Boxes -->
-    <div>
-      <h3 class="font-bold text-gray-700 mb-4">Personnages:</h3>
-      <div id="character-boxes-{{ .Card.ID }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {{ $cardID := .Card.ID }}
-        {{ $boxState := boxAtCard $.BoxesState .Card.ID }}
-        {{ range $boxIndex := iterate $.Size }}
-        {{ block "box" (map "CardID" $cardID "BoxIndex" $boxIndex "Done" (doneAtIndex $boxState $boxIndex) "Character"
-        (characterAtIndex $.Team $boxIndex)) }}{{ end }}
-        {{ end }}
-      </div>
+    <!-- Spell Section -->
+    {{ if .Spell }}
+    <div class="mb-4">
+      <h3 class="font-semibold text-gray-700">Sort Communs:</h3>
+      <p class="text-gray-600">{{ .Spell }}</p>
     </div>
+    {{ end }}
 
-  </div>
-
-  <!-- Spell Section -->
-  {{ if .Spell }}
-  <div class="mb-4">
-    <h3 class="font-semibold text-gray-700">Sort Communs:</h3>
-    <p class="text-gray-600">{{ .Spell }}</p>
   </div>
   {{ end }}
 
-</div>
-{{ end }}
+  <div hx-get="/card?page={{ add .Page 1 }}" hx-trigger="revealed" hx-swap="outerHTML"
+    class="text-center mt-4 text-gray-500">Loading...</div>
+  {{ end }}
 
-<div hx-get="/card?page={{ add .Page 1 }}" hx-trigger="revealed" hx-swap="outerHTML"
-  class="text-center mt-4 text-gray-500">Loading...</div>
-{{ end }}
+  {{ define "box" }}
 
-{{ define "box" }}
+  <div id="character-box-{{ .BoxIndex }}"
+    class="flex items-center space-x-2 cursor-pointer bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200 transition duration-200 flex-wrap">
+    <label class="flex items-center space-x-2 w-full">
+      <input type="checkbox" hx-swap="none" hx-get="/card/toggle?card={{ .CardIndex }}&box={{ .BoxIndex }}"
+        hx-trigger="change"
+        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+        {{ if .Done }} checked {{ end }} />
+      <div id="icon-{{ .BoxIndex }}" class="flex-shrink-0">
+        {{ block "character-icon" .Character.Class }}{{ end }}
+      </div>
+      <div id="name-{{ .BoxIndex }}" class="truncate whitespace-nowrap">
+        {{ .Character.Name }}
+      </div>
+    </label>
+  </div>
 
-<div id="character-box-{{ .BoxIndex }}"
-  class="flex items-center space-x-2 cursor-pointer bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200 transition duration-200 flex-wrap">
-  <label class="flex items-center space-x-2 w-full">
-    <input type="checkbox" hx-swap="none"
-      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-      {{ if .Done }} checked {{ end }} />
-    <div id="icon-{{ .BoxIndex }}" class="flex-shrink-0">
-      {{ block "character-icon" .Character.Class }}{{ end }}
-    </div>
-    <div id="name-{{ .BoxIndex }}" class="truncate whitespace-nowrap">
-      {{ .Character.Name }}
-    </div>
-  </label>
-</div>
-
-{{ end }}
+  {{ end }}
