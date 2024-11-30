@@ -20,7 +20,7 @@
 {{ end }}
 
 {{ define "name" }}
-<div id="name" hx-target="#name" hx-post="/user/edit-name" hx-swap="outerHTML" class="flex items-center space-x-2">
+<div id="name" hx-target="#name" hx-post="/user/edit-name" hx-swap="outerHTML" class="flex items-center space-x-2 cursor-pointer">
   <span class="text-lg font-semibold">{{ .Username }}</span>
   <button hx-get="/user/edit-name"
     class="px-2 py-1 bg-green-700 hover:bg-green-800 text-sm rounded transition">Edit</button>
