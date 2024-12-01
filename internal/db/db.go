@@ -90,7 +90,7 @@ func rebuildCards() error {
 		if err != nil {
 			return err
 		}
-		err = insertCards(dbPool, cards)
+		err = InsertCards(dbPool, cards)
 		if err != nil {
 			return err
 		}

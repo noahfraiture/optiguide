@@ -1,12 +1,13 @@
 -- Cards
 CREATE TABLE IF NOT EXISTS cards (
-  id INTEGER PRIMARY KEY,
-  idx INTEGER UNIQUE NULL NOT DISTINCT,
-  level INTEGER NOT NULL,
+  id UUID PRIMARY KEY,
+  idx INTEGER UNIQUE NULLS NOT DISTINCT,
+  level TEXT NOT NULL,
   info TEXT,
-  task_merge BOOLEAN,
-  task_one TEXT,
-  task_two TEXT,
+  task_title_one TEXT,
+  task_title_two TEXT,
+  task_content_one TEXT,
+  task_content_two TEXT,
   achievements TEXT,
   dungeon_one TEXT,
   dungeon_two TEXT,
@@ -42,7 +43,7 @@ CREATE TABLE IF NOT EXISTS user_characters (
 -- character of his team
 CREATE TABLE IF NOT EXISTS progress (
   user_id UUID REFERENCES users (id) ON DELETE CASCADE,
-  card_id INTEGER REFERENCES cards (id) ON DELETE CASCADE,
+  card_id UUID REFERENCES cards (id) ON DELETE CASCADE,
   box_index INTEGER NOT NULL,
   done BOOLEAN NOT NULL,
   PRIMARY KEY (user_id, card_id, box_index)

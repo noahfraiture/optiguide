@@ -221,7 +221,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = tmpl.ExecuteTemplate(w, "swap", PlusData{
-		MaxCardID: 10,
+		MaxCardID: 200,
 		Team:      team,
 		Boxes:     boxes,
 		BoxIndex:  user.TeamSize - 1,

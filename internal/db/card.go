@@ -9,16 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Card struct {
-	parser.Card
-	// We override property modify them. string -> []string
-	Achievements []string
-	DungeonOne   []string
-	DungeonTwo   []string
-	DungeonThree []string
-}
-
-func insertCards(db *pgxpool.Pool, cards []parser.Card) error {
+func InsertCards(dbPool *pgxpool.Pool, cards []parser.Card) error {
 	rows := [][]any{}
 	for _, card := range cards {
 		rows = append(rows, []any{
@@ -26,24 +17,27 @@ func insertCards(db *pgxpool.Pool, cards []parser.Card) error {
 			card.Idx,
 			card.Level,
 			card.Info,
-			card.TaskMerge,
-			card.TaskOne,
-			card.TaskTwo,
-			card.Achievements,
-			card.DungeonOne,
-			card.DungeonTwo,
-			card.DungeonThree,
+			card.TaskTitleOne,
+			card.TaskTitleTwo,
+			card.TaskContentOne,
+			card.TaskContentTwo,
+			// TODO : change this system, this isn't the best but its ok
+			strings.Join(card.Achievements, "\n"),
+			strings.Join(card.DungeonOne, "\n"),
+			strings.Join(card.DungeonTwo, "\n"),
+			strings.Join(card.DungeonThree, "\n"),
 			card.Spell,
 		})
 	}
-	_, err := db.CopyFrom(context.Background(), pgx.Identifier{"cards"}, []string{
+	_, err := dbPool.CopyFrom(context.Background(), pgx.Identifier{"cards"}, []string{
 		"id",
 		"idx",
 		"level",
 		"info",
-		"task_merge",
-		"task_one",
-		"task_two",
+		"task_title_one",
+		"task_title_two",
+		"task_content_one",
+		"task_content_two",
 		"achievements",
 		"dungeon_one",
 		"dungeon_two",
@@ -53,29 +47,29 @@ func insertCards(db *pgxpool.Pool, cards []parser.Card) error {
 	return err
 }
 
-func GetCards(db *pgxpool.Pool, page int) ([]Card, error) {
+func GetCards(db *pgxpool.Pool, page int) ([]parser.Card, error) {
 	const PAGESIZE = 10
 	query := `SELECT
-		id,
 		idx,
 		level,
 		info,
-		task_merge,
-		task_one,
-		task_two,
+		task_title_one,
+		task_title_two,
+		task_content_one,
+		task_content_two,
 		achievements,
 		dungeon_one,
 		dungeon_two,
 		dungeon_three,
 		spell
 		FROM cards
-		WHERE id >= @lo AND id < @hi
+		WHERE idx >= @lo AND idx < @hi
 		ORDER BY idx;`
 	args := pgx.NamedArgs{
 		"lo": page * PAGESIZE,
 		"hi": (page + 1) * PAGESIZE,
 	}
-	cards := make([]Card, 0, PAGESIZE)
+	cards := make([]parser.Card, 0, PAGESIZE)
 	rows, err := db.Query(context.Background(), query, args)
 	if err != nil {
 		return nil, err
@@ -85,15 +79,15 @@ func GetCards(db *pgxpool.Pool, page int) ([]Card, error) {
 	var dungeonTwoStr string
 	var dungeonThreeStr string
 	for rows.Next() {
-		card := Card{}
+		card := parser.Card{}
 		err := rows.Scan(
-			&card.ID,
 			&card.Idx,
 			&card.Level,
 			&card.Info,
-			&card.TaskMerge,
-			&card.TaskOne,
-			&card.TaskTwo,
+			&card.TaskTitleOne,
+			&card.TaskTitleTwo,
+			&card.TaskContentOne,
+			&card.TaskContentTwo,
 			&achievementsStr,
 			&dungeonOneStr,
 			&dungeonTwoStr,
