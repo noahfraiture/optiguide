@@ -10,13 +10,14 @@ import (
 
 func ToggleProgress(db *pgxpool.Pool, user User, cardIndex, boxIndex int) error {
 	// Start the transaction
-	tx, err := db.Begin(context.Background())
+	ctx := context.Background()
+	tx, err := db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
 	defer func() {
 		if err != nil {
-			tx.Rollback(context.Background())
+			tx.Rollback(ctx)
 		}
 	}()
 
@@ -33,7 +34,7 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardIndex, boxIndex int) error 
     SELECT done FROM upsert;`
 
 	var newDoneValue bool
-	err = tx.QueryRow(context.Background(), queryUpsert, pgx.NamedArgs{
+	err = tx.QueryRow(ctx, queryUpsert, pgx.NamedArgs{
 		"user_id":    user.ID,
 		"card_index": cardIndex,
 		"box_index":  boxIndex,
@@ -60,7 +61,7 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardIndex, boxIndex int) error 
 
 	var progressChange float64
 	err = tx.QueryRow(
-		context.Background(),
+		ctx,
 		queryProgressChange,
 		pgx.NamedArgs{
 			"done":    newDoneValue,
@@ -74,15 +75,35 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardIndex, boxIndex int) error 
 	}
 
 	queryUpdateUser := `UPDATE users SET progress = progress + $1 WHERE id = $2;`
-	_, err = tx.Exec(context.Background(), queryUpdateUser, progressChange, user.ID)
+	_, err = tx.Exec(ctx, queryUpdateUser, progressChange, user.ID)
 	if err != nil {
 		return fmt.Errorf("error updating user progress: %w", err)
 	}
 
-	err = tx.Commit(context.Background())
+	err = tx.Commit(ctx)
 	if err != nil {
 		return fmt.Errorf("error committing transaction: %w", err)
 	}
 
+	return nil
+}
+
+func ToggleAchievement(dbPool *pgxpool.Pool, user User, cardIndex int, achievement string) error {
+	query := `
+		INSERT INTO achievements (name, card_id, done, user_id)
+		VALUES (@name, (SELECT id FROM cards WHERE idx = @idx), true, @user_id)
+		ON CONFLICT (name, card_id, user_id)
+		DO UPDATE SET done = NOT achievements.done;`
+
+	args := pgx.NamedArgs{
+		"name":    achievement,
+		"idx":     cardIndex,
+		"user_id": user.ID,
+	}
+
+	_, err := dbPool.Exec(context.Background(), query, args)
+	if err != nil {
+		return err
+	}
 	return nil
 }

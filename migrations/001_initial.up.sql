@@ -49,6 +49,15 @@ CREATE TABLE IF NOT EXISTS progress (
   PRIMARY KEY (user_id, card_id, box_index)
 );
 
+-- Progress of each achievements for cards
+CREATE TABLE IF NOT EXISTS achievements (
+  name TEXT NOT NULL,
+  card_id UUID NOT NULL,
+  done BOOLEAN NOT NULL DEFAULT FALSE,
+  user_id UUID REFERENCES users (id) ON DELETE CASCADE,
+  PRIMARY KEY (name, card_id, user_id)
+);
+
 -- Guild
 CREATE TABLE IF NOT EXISTS guilds (id UUID PRIMARY KEY, name VARCHAR(64) NOT NULL);
 

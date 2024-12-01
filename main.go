@@ -11,36 +11,14 @@ import (
 	"optiguide/internal/handlers/page/guild"
 	"optiguide/internal/handlers/page/home"
 	"optiguide/internal/handlers/user"
-	"optiguide/internal/parser"
 )
 
 func main() {
 
-	var err error
-	cards, err := parser.Parse("guide.xlsx")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	auth.Init()
-	err = db.Init()
+	err := db.Init()
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	dbPool, err := db.GetPool()
-	if err != nil {
-		log.Fatal(err)
-	}
-	existingCards, err := db.GetCards(dbPool, 0)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(existingCards) == 0 {
-		err = db.InsertCards(dbPool, cards)
-		if err != nil {
-			log.Fatal(err)
-		}
 	}
 
 	// Home
@@ -52,6 +30,7 @@ func main() {
 	http.HandleFunc("/team/save-name", home.SaveName)
 	http.HandleFunc("/card", home.RenderCard)
 	http.HandleFunc("/card/toggle", user.Toggle)
+	http.HandleFunc("/card/toggle-achievement", user.ToggleAchievement)
 
 	// About
 	http.HandleFunc("/about", about.About)
