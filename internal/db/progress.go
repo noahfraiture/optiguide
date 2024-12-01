@@ -25,7 +25,7 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardIndex, boxIndex int) error 
 		SELECT * FROM cards WHERE idx = @card_index
 	), upsert AS (
         INSERT INTO progress (user_id, card_id, box_index, done)
-        VALUES (@user_id, card.card_id, @box_index, true)
+        VALUES (@user_id, (SELECT id FROM card), @box_index, true)
         ON CONFLICT (user_id, card_id, box_index)
         DO UPDATE SET done = NOT progress.done
         RETURNING done

@@ -15,10 +15,10 @@
 {{ end }}
 
 {{ define "swap" }}
-{{ range $cardID := iterate .MaxCardID }}
-<div hx-swap-oob="beforeend:#character-boxes-{{ $cardID }}" id="character-box-{{ $.BoxIndex }}">
-  {{ $boxState := boxAtCard $.Boxes $cardID }}
-  {{ block "box" (map "CardID" $cardID "BoxIndex" $.BoxIndex "Done" (doneAtIndex $boxState $.BoxIndex) "Character" (characterAtIndex $.Team $.BoxIndex) ) }}{{ end }}
+{{ range $cardIndex := iterate .MaxCardID }}
+<div hx-swap-oob="beforeend:#character-boxes-{{ $cardIndex }}" id="character-box-{{ $.BoxIndex }}">
+  {{ $boxState := boxAtCard $.Boxes $cardIndex }}
+  {{ block "box" (map "CardIndex" $cardIndex "BoxIndex" $.BoxIndex "Done" (doneAtIndex $boxState $.BoxIndex) "Character" (characterAtIndex $.Team $.BoxIndex) ) }}{{ end }}
 </div>
 {{ end }}
 

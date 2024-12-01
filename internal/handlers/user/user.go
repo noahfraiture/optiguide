@@ -98,6 +98,7 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 
 	boxStr := r.URL.Query().Get("box")
 	if boxStr == "" {
+		fmt.Println("Can't get box")
 		http.Error(w, "box", http.StatusBadRequest)
 		return
 	}

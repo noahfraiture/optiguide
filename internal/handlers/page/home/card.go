@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"optiguide/internal/db"
 	"optiguide/internal/handlers"
+	"optiguide/internal/parser"
 	"strconv"
 
 	"html/template"
 )
 
 type CardData struct {
-	Cards      []db.Card
+	Cards      []parser.Card
 	Team       []db.Character
 	BoxesState map[int]db.BoxesState
 	Page       int

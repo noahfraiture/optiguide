@@ -4,55 +4,56 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/tealeg/xlsx"
 )
 
 // TODO : change to array of string instead of simple string
 // Currently this is string because of database library hard to understand
 type Card struct {
-	ID           int
-	Idx          int
-	Level        int
-	Info         string
-	TaskMerge    bool
-	TaskOne      string
-	TaskTwo      string
-	Achievements string
-	DungeonOne   string
-	DungeonTwo   string
-	DungeonThree string
-	Spell        string
+	ID             uuid.UUID
+	Idx            int
+	Level          string
+	Info           string // NOTE : we could move that in a different sql table
+	TaskTitleOne   string
+	TaskTitleTwo   string
+	TaskContentOne string
+	TaskContentTwo string
+	Achievements   []string // Different row
+	DungeonOne     []string // Same row but cleaner if it follows same pattern
+	DungeonTwo     []string
+	DungeonThree   []string
+	Spell          string
 }
 
-// Level, first column
-func parseLevel(row *xlsx.Row, prevLevel *int) (int, error) {
-	var level int
-	var err error
-	if row.Cells[0].Value == "" {
-		level = *prevLevel
-	} else {
-		level, err = row.Cells[0].Int()
-		*prevLevel = level
-	}
-	return level, err
-}
+const (
+	LEVEL               = 0
+	INFO                = 2
+	TASKCHECKBOX        = 4
+	TASKTITLEONE        = 4
+	TASKTITLETWO        = 8
+	TASKCONTENTONE      = 6
+	TASKCONTENTTWO      = 8
+	ARROWLEFT           = 6
+	ARROWCENTER         = 7
+	ARROWRIGHT          = 8
+	ACHIEVEMENTCHECKBOX = 11
+	ACHIEVEMENTNAME     = 12
+	DUNGEONSONE         = 14
+	DUNGEONSTWO         = 16
+	DUNGEONSTHREE       = 18
+	SPELLS              = 20
+)
 
-func parseInfo(row *xlsx.Row, prevInfo *string, prevInfoCounter *int) (string, error) {
-	var info string
-	var err error
-	switch {
-	case row.Cells[2].Value == "" && *prevInfoCounter == 0:
-	case row.Cells[2].Value != "" && *prevInfoCounter == 0:
-		info = row.Cells[2].Value
-		*prevInfo = info
-		*prevInfoCounter = row.Cells[2].VMerge + 1
-	case row.Cells[2].Value == "" && *prevInfoCounter != 0:
-		info = *prevInfo
-		*prevInfoCounter--
-	case row.Cells[2].Value != "" && *prevInfoCounter != 0:
-		return "", fmt.Errorf("Cell not empty but overlap with previous")
+func newCard(cardCounter int) *Card {
+	return &Card{
+		ID:           uuid.New(),
+		Idx:          cardCounter,
+		Achievements: []string{},
+		DungeonOne:   []string{},
+		DungeonTwo:   []string{},
+		DungeonThree: []string{},
 	}
-	return info, err
 }
 
 func Parse(fileName string) ([]Card, error) {
@@ -67,49 +68,120 @@ func Parse(fileName string) ([]Card, error) {
 	}
 
 	cards := make([]Card, 0)
+	cardCounter := 0
 
-	var prevLevel int
+	var prevInfoCounter int // When row merged. Can cross multiple cards
 	var prevInfo string
-	var prevInfoCounter int // When row merged
-	step_number := 0
-	for _, row := range progression.Rows[4:] {
-		if prevInfoCounter > 0 {
-			prevInfoCounter--
-		}
+	var prevLevel string
 
-		left := strings.Trim(row.Cells[6].Value, " ↓\n")
-		center := strings.Trim(row.Cells[7].Value, " ↓\n")
-		right := strings.Trim(row.Cells[8].Value, " ↓\n")
-		if center == "↓" || left == "" && right == "" {
+	var card *Card
+	for _, row := range progression.Rows[10:102] {
+		left := strings.Trim(row.Cells[ARROWLEFT].Value, " \n")
+		center := strings.Trim(row.Cells[ARROWCENTER].Value, " \n")
+		right := strings.Trim(row.Cells[ARROWRIGHT].Value, " \n")
+		if center == "↓" || (left == "↓" && right == "↓") {
 			continue
 		}
 
-		level, err := parseLevel(row, &prevLevel)
-		if err != nil {
-			return nil, err
+		// Should trigger on first iteration
+		if row.Cells[TASKTITLEONE].Value != "" &&
+			row.Cells[TASKTITLEONE].Value != "0" &&
+			card != nil {
+			cards = append(cards, *card)
+			cardCounter++
+			card = newCard(cardCounter)
 		}
 
-		// Info supplementaire
-		info, err := parseInfo(row, &prevInfo, &prevInfoCounter)
-		if err != nil {
-			return nil, err
+		if card == nil {
+			card = newCard(cardCounter)
 		}
 
-		cards = append(cards, Card{
-			ID:           step_number,
-			Idx:          step_number,
-			Level:        level,
-			Info:         info,
-			TaskMerge:    row.Cells[6].HMerge == 2,
-			TaskOne:      strings.Trim(row.Cells[6].Value, " ↓\n"),
-			TaskTwo:      strings.Trim(row.Cells[8].Value, " ↓\n"),
-			Achievements: strings.Trim(row.Cells[10].Value, " \n\t\r-"),
-			DungeonOne:   strings.Trim(row.Cells[12].Value, " \n\t\r-"),
-			DungeonTwo:   strings.Trim(row.Cells[14].Value, " \n\t\r-"),
-			DungeonThree: strings.Trim(row.Cells[16].Value, " \n\t\r-"),
-			Spell:        row.Cells[18].Value,
-		})
-		step_number++
+		if row.Cells[LEVEL].Value != "" {
+			prevLevel = row.Cells[LEVEL].Value
+		}
+		card.Level = prevLevel
+
+		if row.Cells[INFO].Value != "" {
+			prevInfo = row.Cells[INFO].Value
+			prevInfoCounter = row.Cells[INFO].VMerge
+			// We must have this line because of there's no merge, the value isn't 1 but null
+			card.Info = prevInfo
+		}
+		if prevInfoCounter > 0 {
+			card.Info = prevInfo
+		}
+		prevInfoCounter--
+
+		if row.Cells[TASKTITLEONE].Value != "" && row.Cells[TASKTITLEONE].Value != "0" {
+			card.TaskTitleOne = row.Cells[TASKTITLEONE].Value
+			card.TaskTitleTwo = row.Cells[TASKTITLETWO].Value
+		}
+
+		if row.Cells[TASKCONTENTONE].Value != "" {
+			card.TaskContentOne = row.Cells[TASKCONTENTONE].Value
+		}
+		if row.Cells[TASKCONTENTTWO].Value != "" {
+			card.TaskContentTwo = row.Cells[TASKCONTENTTWO].Value
+		}
+
+		if row.Cells[ACHIEVEMENTNAME].Value != "" {
+			card.Achievements = append(card.Achievements, row.Cells[ACHIEVEMENTNAME].Value)
+		}
+
+		if strings.Trim(row.Cells[DUNGEONSONE].Value, " -\n\t") != "" {
+			card.DungeonOne = append(card.DungeonOne, strings.Trim(row.Cells[DUNGEONSONE].Value, " -\n\t"))
+		}
+		if strings.Trim(row.Cells[DUNGEONSTWO].Value, " -\n\t") != "" {
+			card.DungeonTwo = append(card.DungeonTwo, strings.Trim(row.Cells[DUNGEONSTWO].Value, " -\n\t"))
+		}
+		if strings.Trim(row.Cells[DUNGEONSTHREE].Value, " -\n\t") != "" {
+			card.DungeonThree = append(card.DungeonThree, strings.Trim(row.Cells[DUNGEONSTHREE].Value, " -\n\t"))
+		}
+
+		if row.Cells[SPELLS].Value != "" {
+			card.Spell = row.Cells[SPELLS].Value
+		}
 	}
 	return cards, nil
+}
+
+func (c Card) prettyPrint() string {
+	var builder strings.Builder
+
+	builder.WriteString("Card Details:\n")
+	builder.WriteString(fmt.Sprintf("ID: %s\n", c.ID))
+	builder.WriteString(fmt.Sprintf("Index: %d\n", c.Idx))
+	builder.WriteString(fmt.Sprintf("Level: %s\n", c.Level))
+	builder.WriteString(fmt.Sprintf("Info: %s\n", c.Info))
+	builder.WriteString(fmt.Sprintf("Task Titles: %s, %s\n", c.TaskTitleOne, c.TaskTitleTwo))
+	builder.WriteString(fmt.Sprintf("Task Contents: %s\n", c.TaskContentOne))
+	builder.WriteString(fmt.Sprintf("             : %s\n", c.TaskContentTwo))
+
+	// Format achievements
+	if len(c.Achievements) > 0 {
+		builder.WriteString("Achievements:\n")
+		for i, achievement := range c.Achievements {
+			builder.WriteString(fmt.Sprintf("  %d. %s\n", i+1, achievement))
+		}
+	}
+
+	// Format dungeons
+	if len(c.DungeonOne) > 0 || len(c.DungeonTwo) > 0 || len(c.DungeonThree) > 0 {
+		builder.WriteString("Dungeons:\n")
+		formatDungeon := func(name string, dungeon []string) {
+			if len(dungeon) > 0 {
+				builder.WriteString(fmt.Sprintf("  %s:\n", name))
+				for i, item := range dungeon {
+					builder.WriteString(fmt.Sprintf("    %d. %s\n", i+1, item))
+				}
+			}
+		}
+		formatDungeon("Dungeon One", c.DungeonOne)
+		formatDungeon("Dungeon Two", c.DungeonTwo)
+		formatDungeon("Dungeon Three", c.DungeonThree)
+	}
+
+	builder.WriteString(fmt.Sprintf("Spell: %s\n", c.Spell))
+
+	return builder.String()
 }
