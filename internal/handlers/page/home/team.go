@@ -199,12 +199,7 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.TeamSize += 1
-	boxes, err := db.GetRenderBoxByCards(dbPool, user)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "boxes", http.StatusBadRequest)
-		return
-	}
+	boxes, err := db.GetCardBoxes(dbPool, user)
 
 	tmpl, err := template.
 		New("swap").

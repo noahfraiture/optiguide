@@ -131,3 +131,57 @@ func Toggle(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func ToggleAchievement(w http.ResponseWriter, r *http.Request) {
+	userAuth, err := auth.GetUser(r)
+	if err != nil {
+		msg := fmt.Sprintf("Could not get user: %v", err)
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusUnauthorized)
+		return
+	}
+
+	cardStr := r.URL.Query().Get("card")
+	if cardStr == "" {
+		msg := fmt.Sprintf("No card index: %s", cardStr)
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	cardIndex, err := strconv.Atoi(cardStr)
+	if err != nil {
+		msg := fmt.Sprintf("Invalid card ID: %s", cardStr)
+		fmt.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	achievementStr := r.URL.Query().Get("achievement")
+	if achievementStr == "" {
+		fmt.Println("Can't get box")
+		http.Error(w, "box", http.StatusBadRequest)
+		return
+	}
+
+	dbPool, err := db.GetPool()
+	if err != nil {
+		fmt.Println("Can't get db to toggle box")
+		http.Error(w, "Can't get db to toggle box", http.StatusInternalServerError)
+		return
+	}
+
+	user, err := db.GetUserFromProvider(dbPool, userAuth)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "can't get user", http.StatusInternalServerError)
+		return
+	}
+
+	err = db.ToggleAchievement(dbPool, user, cardIndex, achievementStr)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "toggle achievement", http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}

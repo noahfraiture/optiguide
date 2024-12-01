@@ -73,9 +73,17 @@
       {{ if .Achievements }}
       <div class="mb-4">
         <h3 class="font-bold text-gray-700">Succès:</h3>
-        {{ range .Achievements }}
-        <p class="text-gray-600">- {{ . }}</p>
-        {{ end }}
+        <ul class="list-none p-0">
+          {{ $cardIndex := .Idx }}
+          {{ range .Achievements }}
+          <li class="flex items-center mb-2">
+            <label>
+              <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600" hx-get="/card/toggle-achievement?card={{ $cardIndex }}&achievement={{ urlquery .Name }}" {{ if .Done }} checked {{ end }} />
+              <span class="ml-2 text-gray-600">{{ .Name }}</span>
+            </label>
+          </li>
+          {{ end }}
+        </ul>
       </div>
       {{ end }}
     </div>
@@ -84,11 +92,11 @@
     <div>
       <h3 class="font-bold text-gray-700 mb-4">Personnages:</h3>
       <div id="character-boxes-{{ .Idx }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {{ $boxState := boxAtCard $.BoxesState .Idx }}
         {{ $cardIndex := .Idx }}
+        {{ $boxes := .Boxes }}
+
         {{ range $boxIndex := iterate $.Size }}
-        {{ block "box" (map "CardIndex" $cardIndex "BoxIndex" $boxIndex "Done" (doneAtIndex $boxState $boxIndex)
-        "Character"
+        {{ block "box" (map "CardIndex" $cardIndex "BoxIndex" $boxIndex "Done" (index $boxes $boxIndex) "Character"
         (characterAtIndex $.Team $boxIndex)) }}{{ end }}
         {{ end }}
       </div>

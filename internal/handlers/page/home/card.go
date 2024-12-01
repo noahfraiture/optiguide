@@ -5,18 +5,16 @@ import (
 	"net/http"
 	"optiguide/internal/db"
 	"optiguide/internal/handlers"
-	"optiguide/internal/parser"
 	"strconv"
 
 	"html/template"
 )
 
 type CardData struct {
-	Cards      []parser.Card
-	Team       []db.Character
-	BoxesState map[int]db.BoxesState
-	Page       int
-	Size       int
+	Cards []db.Card
+	Team  []db.Character
+	Page  int
+	Size  int
 }
 
 func RenderCard(w http.ResponseWriter, r *http.Request) {
@@ -49,16 +47,10 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 		return
 	}
 
-	cards, err := db.GetCards(dbPool, page)
+	cards, err := db.GetCards(dbPool, user, page)
 	if err != nil {
 		fmt.Printf("Can't get cards %s\n", err)
 		http.Error(w, "Can't get cards", http.StatusInternalServerError)
-		return
-	}
-	boxes, err := db.GetRenderBoxByCards(dbPool, user)
-	if err != nil {
-		fmt.Printf("Can't get boxes %s\n", err)
-		http.Error(w, "Can't get boxes", http.StatusInternalServerError)
 		return
 	}
 
@@ -83,11 +75,10 @@ func renderCard(w http.ResponseWriter, page int, user db.User) {
 	}
 
 	err = tmpl.ExecuteTemplate(w, "cards", CardData{
-		Cards:      cards,
-		Team:       team,
-		BoxesState: boxes,
-		Page:       page,
-		Size:       user.TeamSize,
+		Cards: cards,
+		Team:  team,
+		Page:  page,
+		Size:  user.TeamSize,
 	})
 	if err != nil {
 		fmt.Println(err)
