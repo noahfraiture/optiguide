@@ -7,9 +7,8 @@
   </div>
 
   <div class="mb-4">
-    {{ if .TaskTitleTwo }}
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-4">
-      <!-- Task 1 and Task 2 side by side -->
+    {{ if .TaskContentTwo }}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
       <div class="md:col-span-1 lg:col-span-1">
         <div class="bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
           <h3 class="font-medium text-green-700">{{ .TaskTitleOne }}</h3>
@@ -18,7 +17,11 @@
       </div>
       <div class="md:col-span-1 lg:col-span-1">
         <div class="bg-gray-100 p-4 rounded-lg hover:bg-green-100 cursor-pointer">
+          {{ if .TaskTitleTwo }}
           <h3 class="font-medium text-green-700">{{ .TaskTitleTwo }}</h3>
+          {{ else }}
+          <h3 class="font-medium text-green-700">{{ .TaskTitleOne }}</h3>
+          {{ end }}
           <p>{{ .TaskContentTwo }}</p>
         </div>
       </div>
@@ -42,6 +45,7 @@
     </div>
     {{ end }}
   </div>
+
   <!-- Dungeons and Achievements -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
@@ -78,7 +82,9 @@
           {{ range .Achievements }}
           <li class="flex items-center mb-2">
             <label>
-              <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600" hx-get="/card/toggle-achievement?card={{ $cardIndex }}&achievement={{ urlquery .Name }}" {{ if .Done }} checked {{ end }} />
+              <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600"
+                hx-get="/card/toggle-achievement?card={{ $cardIndex }}&achievement={{ urlquery .Name }}" {{ if .Done }}
+                checked {{ end }} />
               <span class="ml-2 text-gray-600">{{ .Name }}</span>
             </label>
           </li>
