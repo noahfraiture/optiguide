@@ -97,7 +97,7 @@ func Parse(fileName string) ([]Card, error) {
 		}
 
 		if row.Cells[LEVEL].Value != "" {
-			prevLevel = row.Cells[LEVEL].Value
+			prevLevel = strings.ReplaceAll(row.Cells[LEVEL].Value, ".0", "")
 		}
 		card.Level = prevLevel
 
