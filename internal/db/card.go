@@ -6,19 +6,23 @@ import (
 	"optiguide/internal/parser"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Achievement struct {
 	Name string
+	Link string
 	Done bool
 }
 
 type Card struct {
 	parser.Card
+	// We create the same achievements but with the field Done
 	Achievements []Achievement
-	Boxes        []bool
+	// We add the `boxes` which are the progress of the team on the card
+	Boxes []bool
 }
 
 func IsEmpty(dbPool *pgxpool.Pool) (bool, error) {
@@ -36,44 +40,70 @@ func IsEmpty(dbPool *pgxpool.Pool) (bool, error) {
 }
 
 func InsertCards(dbPool *pgxpool.Pool, cards []parser.Card) error {
-	rows := [][]any{}
-	for _, card := range cards {
-		rows = append(rows, []any{
-			card.ID,
-			card.Idx,
-			card.Level,
-			card.Info,
-			card.TaskTitleOne,
-			card.TaskTitleTwo,
-			card.TaskContentOne,
-			card.TaskContentTwo,
-			// TODO : change this system, this isn't the best but its ok
-			strings.Join(card.Achievements, "\n"),
-			strings.Join(card.DungeonOne, "\n"),
-			strings.Join(card.DungeonTwo, "\n"),
-			strings.Join(card.DungeonThree, "\n"),
-			card.Spell,
-		})
+	ctx := context.Background()
+	tx, err := dbPool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("could not start transaction: %v", err)
 	}
-	_, err := dbPool.CopyFrom(context.Background(), pgx.Identifier{"cards"}, []string{
-		"id",
-		"idx",
-		"level",
-		"info",
-		"task_title_one",
-		"task_title_two",
-		"task_content_one",
-		"task_content_two",
-		"achievements",
-		"dungeon_one",
-		"dungeon_two",
-		"dungeon_three",
-		"spell",
-	}, pgx.CopyFromRows(rows))
-	return err
+	defer tx.Rollback(ctx)
+
+	for _, card := range cards {
+		err := insertCard(tx, card)
+		if err != nil {
+			return err
+		}
+
+		err = insertAchievements(tx, card)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
-func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]Card, error) {
+func insertCard(tx pgx.Tx, card parser.Card) error {
+	_, err := tx.Exec(context.Background(), `
+        INSERT INTO cards (id, idx, level, info, task_title_one, task_title_two, task_content_one, task_content_two, dungeon_one, dungeon_two, dungeon_three, spell)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+		card.ID,
+		card.Idx,
+		card.Level,
+		card.Info,
+		card.TaskTitleOne,
+		card.TaskTitleTwo,
+		card.TaskContentOne,
+		card.TaskContentTwo,
+		strings.Join(card.DungeonOne, "\n"),
+		strings.Join(card.DungeonTwo, "\n"),
+		strings.Join(card.DungeonThree, "\n"),
+		card.Spell,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert card: %v", err)
+	}
+	return nil
+}
+
+func insertAchievements(tx pgx.Tx, card parser.Card) error {
+	for _, achievement := range card.Achievements {
+		achievementID := uuid.New()
+		_, err := tx.Exec(context.Background(), `
+            INSERT INTO achievements (id, name, link, card_id)
+            VALUES ($1, $2, $3, $4)`,
+			achievementID,
+			achievement.Value,
+			achievement.Link,
+			card.ID,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to insert achievement: %v", err)
+		}
+	}
+	return nil
+}
+
+func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]*Card, error) {
 	const PAGESIZE = 10
 	ctx := context.Background()
 
@@ -81,11 +111,7 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]Card, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback(context.Background())
-		}
-	}()
+	defer tx.Rollback(ctx)
 
 	query := `SELECT
         cards.idx,
@@ -95,7 +121,6 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]Card, error) {
         cards.task_title_two,
         cards.task_content_one,
         cards.task_content_two,
-        cards.achievements,
         cards.dungeon_one,
         cards.dungeon_two,
         cards.dungeon_three,
@@ -103,12 +128,20 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]Card, error) {
         progress.box_index,
         progress.done,
         achievements.name,
-        achievements.done,
+        achievements.link,
+        achievements_users.done,
 		users.team_size
     FROM cards
-    JOIN users ON users.id = @user_id
-    LEFT JOIN progress ON cards.id = progress.card_id AND progress.user_id = @user_id
-    LEFT JOIN achievements ON cards.id = achievements.card_id AND achievements.user_id = @user_id
+    JOIN users
+		ON users.id = @user_id
+    LEFT JOIN progress
+		ON cards.id = progress.card_id
+		AND progress.user_id = @user_id
+    LEFT JOIN achievements
+		ON cards.id = achievements.card_id
+    LEFT JOIN achievements_users
+		ON achievements.id = achievements_users.achievement_id
+		AND @user_id = achievements_users.user_id
     WHERE cards.idx >= @lo AND cards.idx < @hi
     ORDER BY cards.idx;`
 
@@ -125,25 +158,25 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]Card, error) {
 
 	// A map to associate each card's index to its instance, for managing boxes state
 	cardsMap := make(map[int]*Card)
-	cards := make([]Card, 0, PAGESIZE)
+	cards := make([]*Card, 0, PAGESIZE)
 
 	// Process rows
 	for rows.Next() {
 		var (
 			idx             int
-			achievementStr  string
 			dungeonOneStr   string
 			dungeonTwoStr   string
 			dungeonThreeStr string
 			boxIndex        *int
 			boxDone         *bool
 			achievementName *string
+			achievementLink *string
 			achievementDone *bool
 			teamSize        int
 		)
 
-		// Create an inner card for the current row
-		card := Card{}
+		// Create an inner newCard for the current row
+		newCard := Card{}
 
 		// We scan the card. If it's already known, only the idx is relevant
 		// We might already know it because the way the query is done, will
@@ -151,20 +184,20 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]Card, error) {
 		// NOTE : we could optimize that
 		err := rows.Scan(
 			&idx,
-			&card.Level,
-			&card.Info,
-			&card.TaskTitleOne,
-			&card.TaskTitleTwo,
-			&card.TaskContentOne,
-			&card.TaskContentTwo,
-			&achievementStr,
+			&newCard.Level,
+			&newCard.Info,
+			&newCard.TaskTitleOne,
+			&newCard.TaskTitleTwo,
+			&newCard.TaskContentOne,
+			&newCard.TaskContentTwo,
 			&dungeonOneStr,
 			&dungeonTwoStr,
 			&dungeonThreeStr,
-			&card.Spell,
+			&newCard.Spell,
 			&boxIndex,
 			&boxDone,
 			&achievementName,
+			&achievementLink,
 			&achievementDone,
 			&teamSize,
 		)
@@ -174,31 +207,35 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]Card, error) {
 
 		existingCard, exists := cardsMap[idx]
 		if !exists {
-			card.Idx = idx
-			card.Achievements = parseAchievement(achievementStr)
-			card.DungeonOne = listFromString(dungeonOneStr)
-			card.DungeonTwo = listFromString(dungeonTwoStr)
-			card.DungeonThree = listFromString(dungeonThreeStr)
-			card.Boxes = make([]bool, teamSize)
-			cardsMap[idx] = &card
-			cards = append(cards, card)
-			existingCard = &card
-		} else {
-			card = *existingCard
+			// We set these once we don't have row for the same card anymore
+			newCard.Idx = idx
+			newCard.DungeonOne = listFromString(dungeonOneStr)
+			newCard.DungeonTwo = listFromString(dungeonTwoStr)
+			newCard.DungeonThree = listFromString(dungeonThreeStr)
+			newCard.Boxes = make([]bool, teamSize)
+			cardsMap[idx] = &newCard
+			cards = append(cards, &newCard)
+			existingCard = &newCard
 		}
 
 		if boxIndex != nil && boxDone != nil {
 			existingCard.Boxes[*boxIndex] = *boxDone
 		}
 
-		if achievementName != nil && achievementDone != nil {
-			for i, achievement := range card.Achievements {
-				if achievement.Name == *achievementName {
-					achievement.Done = *achievementDone
-					card.Achievements[i] = achievement
-					break
-				}
+		if achievementName != nil {
+			var link string
+			if achievementLink != nil {
+				link = *achievementLink
 			}
+			var done bool
+			if achievementDone != nil {
+				done = *achievementDone
+			}
+			existingCard.Achievements = append(existingCard.Achievements, Achievement{
+				Name: *achievementName,
+				Link: link,
+				Done: done,
+			})
 		}
 	}
 
@@ -208,15 +245,6 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]Card, error) {
 	}
 
 	return cards, nil
-}
-
-func parseAchievement(value string) []Achievement {
-	names := strings.Split(value, "\n")
-	achievements := make([]Achievement, 0, len(names))
-	for _, name := range names {
-		achievements = append(achievements, Achievement{Name: name, Done: false})
-	}
-	return achievements
 }
 
 func listFromString(value string) []string {

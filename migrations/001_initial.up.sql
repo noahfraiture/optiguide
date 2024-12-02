@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS cards (
   task_title_two TEXT,
   task_content_one TEXT,
   task_content_two TEXT,
-  achievements TEXT,
   dungeon_one TEXT,
   dungeon_two TEXT,
   dungeon_three TEXT,
@@ -49,13 +48,21 @@ CREATE TABLE IF NOT EXISTS progress (
   PRIMARY KEY (user_id, card_id, box_index)
 );
 
--- Progress of each achievements for cards
+-- Existing achievements
 CREATE TABLE IF NOT EXISTS achievements (
+  id UUID PRIMARY KEY,
   name TEXT NOT NULL,
-  card_id UUID NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT FALSE,
+  link TEXT,
+  card_id UUID REFERENCES cards (id) ON DELETE CASCADE,
+  UNIQUE (name, card_id)
+);
+
+-- Progress of each achievements for cards
+CREATE TABLE IF NOT EXISTS achievements_users (
+  achievement_id UUID REFERENCES achievements (id) ON DELETE CASCADE,
   user_id UUID REFERENCES users (id) ON DELETE CASCADE,
-  PRIMARY KEY (name, card_id, user_id)
+  done BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (achievement_id, user_id)
 );
 
 -- Guild

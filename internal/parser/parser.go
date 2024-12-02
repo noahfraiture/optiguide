@@ -5,10 +5,14 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/tealeg/xlsx"
+	"github.com/tealeg/xlsx/v3"
 )
 
-// TODO : change to array of string instead of simple string
+type Achievement struct {
+	Value string
+	Link  string
+}
+
 // Currently this is string because of database library hard to understand
 type Card struct {
 	ID             uuid.UUID
@@ -19,8 +23,8 @@ type Card struct {
 	TaskTitleTwo   string
 	TaskContentOne string
 	TaskContentTwo string
-	Achievements   []string // Different row
-	DungeonOne     []string // Same row but cleaner if it follows same pattern
+	Achievements   []Achievement // Different row
+	DungeonOne     []string      // Same row but cleaner if it follows same pattern
 	DungeonTwo     []string
 	DungeonThree   []string
 	Spell          string
@@ -45,11 +49,13 @@ const (
 	SPELLS              = 20
 )
 
+const CHECKBOXTEXT = "FALSE"
+
 func newCard(cardCounter int) *Card {
 	return &Card{
 		ID:           uuid.New(),
 		Idx:          cardCounter,
-		Achievements: []string{},
+		Achievements: []Achievement{},
 		DungeonOne:   []string{},
 		DungeonTwo:   []string{},
 		DungeonThree: []string{},
@@ -75,17 +81,21 @@ func Parse(fileName string) ([]Card, error) {
 	var prevLevel string
 
 	var card *Card
-	for _, row := range progression.Rows[10:102] {
-		left := strings.Trim(row.Cells[ARROWLEFT].Value, " \n")
-		center := strings.Trim(row.Cells[ARROWCENTER].Value, " \n")
-		right := strings.Trim(row.Cells[ARROWRIGHT].Value, " \n")
+	for i := 9; i < 102; i++ {
+		row, err := progression.Row(i)
+		if err != nil {
+			return nil, err
+		}
+		left := strings.Trim(row.GetCell(ARROWLEFT).String(), " \n")
+		center := strings.Trim(row.GetCell(ARROWCENTER).String(), " \n")
+		right := strings.Trim(row.GetCell(ARROWRIGHT).String(), " \n")
 		if center == "↓" || (left == "↓" && right == "↓") {
 			continue
 		}
 
 		// Should trigger on first iteration
-		if row.Cells[TASKTITLEONE].Value != "" &&
-			row.Cells[TASKTITLEONE].Value != "0" &&
+		if row.GetCell(TASKTITLEONE).String() != "" &&
+			row.GetCell(TASKTITLEONE).String() != CHECKBOXTEXT &&
 			card != nil {
 			cards = append(cards, *card)
 			cardCounter++
@@ -96,14 +106,14 @@ func Parse(fileName string) ([]Card, error) {
 			card = newCard(cardCounter)
 		}
 
-		if row.Cells[LEVEL].Value != "" {
-			prevLevel = strings.ReplaceAll(row.Cells[LEVEL].Value, ".0", "")
+		if row.GetCell(LEVEL).String() != "" {
+			prevLevel = strings.ReplaceAll(row.GetCell(LEVEL).String(), ".0", "")
 		}
 		card.Level = prevLevel
 
-		if row.Cells[INFO].Value != "" {
-			prevInfo = row.Cells[INFO].Value
-			prevInfoCounter = row.Cells[INFO].VMerge
+		if row.GetCell(INFO).String() != "" {
+			prevInfo = row.GetCell(INFO).String()
+			prevInfoCounter = row.GetCell(INFO).VMerge
 			// We must have this line because of there's no merge, the value isn't 1 but null
 			card.Info = prevInfo
 		}
@@ -112,34 +122,48 @@ func Parse(fileName string) ([]Card, error) {
 		}
 		prevInfoCounter--
 
-		if row.Cells[TASKTITLEONE].Value != "" && row.Cells[TASKTITLEONE].Value != "0" {
-			card.TaskTitleOne = row.Cells[TASKTITLEONE].Value
-			card.TaskTitleTwo = row.Cells[TASKTITLETWO].Value
+		if row.GetCell(TASKTITLEONE).String() != "" &&
+			row.GetCell(TASKTITLEONE).String() != CHECKBOXTEXT {
+			card.TaskTitleOne = row.GetCell(TASKTITLEONE).String()
+			card.TaskTitleTwo = row.GetCell(TASKTITLETWO).String()
 		}
 
-		if row.Cells[TASKCONTENTONE].Value != "" {
-			card.TaskContentOne = row.Cells[TASKCONTENTONE].Value
+		if row.GetCell(TASKCONTENTONE).String() != "" {
+			card.TaskContentOne = row.GetCell(TASKCONTENTONE).String()
 		}
-		if row.Cells[TASKCONTENTTWO].Value != "" {
-			card.TaskContentTwo = row.Cells[TASKCONTENTTWO].Value
-		}
-
-		if row.Cells[ACHIEVEMENTNAME].Value != "" {
-			card.Achievements = append(card.Achievements, row.Cells[ACHIEVEMENTNAME].Value)
+		if row.GetCell(TASKCONTENTTWO).String() != "" {
+			card.TaskContentTwo = row.GetCell(TASKCONTENTTWO).String()
 		}
 
-		if strings.Trim(row.Cells[DUNGEONSONE].Value, " -\n\t") != "" {
-			card.DungeonOne = append(card.DungeonOne, strings.Trim(row.Cells[DUNGEONSONE].Value, " -\n\t"))
-		}
-		if strings.Trim(row.Cells[DUNGEONSTWO].Value, " -\n\t") != "" {
-			card.DungeonTwo = append(card.DungeonTwo, strings.Trim(row.Cells[DUNGEONSTWO].Value, " -\n\t"))
-		}
-		if strings.Trim(row.Cells[DUNGEONSTHREE].Value, " -\n\t") != "" {
-			card.DungeonThree = append(card.DungeonThree, strings.Trim(row.Cells[DUNGEONSTHREE].Value, " -\n\t"))
+		if row.GetCell(ACHIEVEMENTNAME).String() != "" {
+			achievement := Achievement{
+				Value: row.GetCell(ACHIEVEMENTNAME).String(),
+				Link:  row.GetCell(ACHIEVEMENTNAME).Hyperlink.Link,
+			}
+			card.Achievements = append(card.Achievements, achievement)
 		}
 
-		if row.Cells[SPELLS].Value != "" {
-			card.Spell = row.Cells[SPELLS].Value
+		if strings.Trim(row.GetCell(DUNGEONSONE).String(), " -\n\t") != "" {
+			card.DungeonOne = append(
+				card.DungeonOne,
+				strings.Trim(row.GetCell(DUNGEONSONE).String(), " -\n\t"),
+			)
+		}
+		if strings.Trim(row.GetCell(DUNGEONSTWO).String(), " -\n\t") != "" {
+			card.DungeonTwo = append(
+				card.DungeonTwo,
+				strings.Trim(row.GetCell(DUNGEONSTWO).String(), " -\n\t"),
+			)
+		}
+		if strings.Trim(row.GetCell(DUNGEONSTHREE).String(), " -\n\t") != "" {
+			card.DungeonThree = append(
+				card.DungeonThree,
+				strings.Trim(row.GetCell(DUNGEONSTHREE).String(), " -\n\t"),
+			)
+		}
+
+		if row.GetCell(SPELLS).String() != "" {
+			card.Spell = row.GetCell(SPELLS).String()
 		}
 	}
 	return cards, nil

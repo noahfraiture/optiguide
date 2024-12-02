@@ -11,7 +11,7 @@ import (
 )
 
 type CardData struct {
-	Cards []db.Card
+	Cards []*db.Card
 	Team  []db.Character
 	Page  int
 	Size  int

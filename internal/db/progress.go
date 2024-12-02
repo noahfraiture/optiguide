@@ -15,11 +15,7 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardIndex, boxIndex int) error 
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback(ctx)
-		}
-	}()
+	defer tx.Rollback(ctx)
 
 	queryUpsert := `
 	WITH card AS (
@@ -90,10 +86,16 @@ func ToggleProgress(db *pgxpool.Pool, user User, cardIndex, boxIndex int) error 
 
 func ToggleAchievement(dbPool *pgxpool.Pool, user User, cardIndex int, achievement string) error {
 	query := `
-		INSERT INTO achievements (name, card_id, done, user_id)
-		VALUES (@name, (SELECT id FROM cards WHERE idx = @idx), true, @user_id)
-		ON CONFLICT (name, card_id, user_id)
-		DO UPDATE SET done = NOT achievements.done;`
+		WITH achievement_id AS (
+			SELECT achievements.id AS id
+			FROM achievements
+			JOIN cards ON achievements.card_id = cards.id
+			WHERE achievements.name = @name AND cards.idx = @idx
+		)
+		INSERT INTO achievements_users (achievement_id, user_id, done)
+		VALUES ((SELECT id FROM achievement_id), @user_id, true)
+		ON CONFLICT (achievement_id, user_id)
+		DO UPDATE SET done = NOT achievements_users.done;`
 
 	args := pgx.NamedArgs{
 		"name":    achievement,

@@ -85,7 +85,11 @@
               <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600"
                 hx-get="/card/toggle-achievement?card={{ $cardIndex }}&achievement={{ urlquery .Name }}" {{ if .Done }}
                 checked {{ end }} />
+              {{ if .Link }}
+              <a href="{{ .Link }}" target="_blank" class="ml-2 text-blue-500 hover:underline">{{ .Name }}</a>
+              {{ else }}
               <span class="ml-2 text-gray-600">{{ .Name }}</span>
+              {{ end }}
             </label>
           </li>
           {{ end }}
