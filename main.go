@@ -15,8 +15,11 @@ import (
 
 func main() {
 
-	auth.Init()
-	err := db.Init()
+	err := auth.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = db.Init()
 	if err != nil {
 		log.Fatal(err)
 	}

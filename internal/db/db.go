@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"optiguide/internal/parser"
 	"os"
@@ -26,22 +27,25 @@ func GetPool() (*pgxpool.Pool, error) {
 
 // Define the db connection pool. Don't forget to close !
 func Init() error {
+	password, err := getPassword()
+	if err != nil {
+		return err
+	}
 	connStrPgx := fmt.Sprintf(
 		"user=%s password=%s host=%s port=%s dbname=%s",
 		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
+		password,
 		os.Getenv("POSTGRES_HOST"),
 		"5432",
 		os.Getenv("POSTGRES_DB"),
 	)
 
-	var err error
 	dbPool, err = pgxpool.New(context.Background(), connStrPgx)
 	if err != nil {
 		return err
 	}
 
-	if err := buildDatabase(); err != nil && err != migrate.ErrNoChange {
+	if err := buildDatabase(password); err != nil && err != migrate.ErrNoChange {
 		fmt.Println("error during building of database")
 		return err
 	}
@@ -54,12 +58,12 @@ func Init() error {
 	return nil
 }
 
-func buildDatabase() error {
+func buildDatabase(password string) error {
 	// Build the database from the migrations files
 	connStrMigration := fmt.Sprintf(
 		"postgresql://%s:%s@%s:%s/%s?sslmode=disable&search_path=public",
 		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
+		password,
 		os.Getenv("POSTGRES_HOST"),
 		"5432",
 		os.Getenv("POSTGRES_DB"),
@@ -96,4 +100,20 @@ func rebuildCards() error {
 		}
 	}
 	return nil
+}
+
+func getPassword() (string, error) {
+	password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+	if !ok {
+		passwordFile, ok := os.LookupEnv("POSTGRES_PASSWORD_FILE")
+		if !ok {
+			return "", fmt.Errorf("No password set")
+		}
+		data, err := os.ReadFile(passwordFile)
+		if err != nil {
+			return "", err
+		}
+		password = strings.TrimSpace(string(data))
+	}
+	return password, nil
 }

@@ -1,0 +1,67 @@
+services:
+  website:
+    image: noahfraiture/optiguide:prod
+    labels :
+      - "traefik.enable=true"
+      - "traefik.http.routers.optiguide.rule=Host(`optiguide.dev`)"
+      - "traefik.http.routers.optiguide.entrypoints=websecure"
+      - "traefik.http.routers.optiguide.tls.certresolver=myresolver"
+    environment:
+      - GOOGLE_ID_FILE=/run/secrets/google-id
+      - GOOGLE_SECRET_FILE=/run/secrets/google-secret
+      - GOOGLE_CALLBACK_URL=https://optiguide.dev/auth/google/callback
+      - SESSION_SECRET_FILE=/run/secrets/session-secret
+      - POSTGRES_USER=optiguide
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - POSTGRES_DB=optiguide
+      - POSTGRES_HOST=postgres
+    secrets:
+      - db-password
+      - google-id
+      - google-secret
+      - session-secret
+    deploy:
+      mode: replicated
+      replicas: 3
+    restart: always
+    depends_on:
+      optiguide-postgres:
+        condition: service_healthy
+    networks:
+      - traefik
+
+  postgres:
+    image: postgres:17-alpine3.20
+    environment:
+      - POSTGRES_USER=optiguide
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - POSTGRES_DB=optiguide
+    secrets:
+      - db-password
+    restart: unless-stopped
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - traefik
+
+volumes:
+  postgres_data:
+networks:
+  traefik:
+    external: true
+secrets:
+  db-password:
+    external: true
+  google-id:
+    external: true
+  google-secret:
+    external: true
+  session-secret:
+    external: true
