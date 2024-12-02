@@ -26,7 +26,7 @@ func Init() error {
 
 	// Check that all necessary variables are set
 	if clientID == "" || clientSecret == "" || clientCallbackURL == "" || sessionSecret == "" {
-		log.Fatal("Environment variables (GOOGLE_ID, GOOGLE_SECRET, GOOGLE_CALLBACK_URL, SESSION_SECRET) are required")
+		log.Fatalf("Environment variables (GOOGLE_ID, GOOGLE_SECRET, GOOGLE_CALLBACK_URL, SESSION_SECRET) are required but got (%s, %s, %s, %s)", clientID, clientSecret, clientCallbackURL, sessionSecret)
 	}
 
 	store = sessions.NewCookieStore([]byte(sessionSecret))
