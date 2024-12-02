@@ -216,8 +216,6 @@ func parseAchievement(value string) []Achievement {
 	for _, name := range names {
 		achievements = append(achievements, Achievement{Name: name, Done: false})
 	}
-	fmt.Println("=== ACHIEVEMENTS ===")
-	fmt.Println(achievements)
 	return achievements
 }
 
