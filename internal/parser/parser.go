@@ -81,7 +81,7 @@ func Parse(fileName string) ([]Card, error) {
 	var prevLevel string
 
 	var card *Card
-	for i := 9; i < 102; i++ {
+	for i := 9; i < 336; i++ {
 		row, err := progression.Row(i)
 		if err != nil {
 			return nil, err

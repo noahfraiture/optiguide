@@ -1,4 +1,7 @@
 {{ define "topbar" }}
+<div class="bg-yellow-600 text-white p-3 text-center">
+  <strong>Warning:</strong> Bonjour, Ce site est encore en développement, tout comme le guide sur lequel il se base. De ce fait, j'ai limité le nombre d'étapes et les dernières ne sont pas encore présentes ; je les ajouterai dès que le guide sera terminé. Je ferai tout mon possible pour l'éviter, mais il n'est pas exclu qu'un reset de la progression de chaque utilisateur puisse survenir. Cela ne devrait pas se produire, mais tant que le guide n'est pas finalisé, je ne peux pas garantir comment la transition se passera.
+</div>
 <div class="bg-green-600 text-white p-4 shadow-md">
   <div class="container mx-auto flex justify-between items-center">
     <div class="flex items-center space-x-4">
@@ -20,7 +23,8 @@
 {{ end }}
 
 {{ define "name" }}
-<div id="name" hx-target="#name" hx-post="/user/edit-name" hx-swap="outerHTML" class="flex items-center space-x-2 cursor-pointer">
+<div id="name" hx-target="#name" hx-post="/user/edit-name" hx-swap="outerHTML"
+  class="flex items-center space-x-2 cursor-pointer">
   <span class="text-lg font-semibold">{{ .Username }}</span>
   <button hx-get="/user/edit-name"
     class="px-2 py-1 bg-green-700 hover:bg-green-800 text-sm rounded transition">Edit</button>

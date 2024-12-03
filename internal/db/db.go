@@ -50,7 +50,7 @@ func Init() error {
 		return err
 	}
 
-	if err := rebuildCards(); err != nil {
+	if err := updateCards(); err != nil {
 		fmt.Println("error during rebuilding of cards")
 		return err
 	}
@@ -98,6 +98,23 @@ func rebuildCards() error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func updateCards() error {
+	dbPool, err := GetPool()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	cards, err := parser.Parse("guide.xlsx")
+	if err != nil {
+		return err
+	}
+	err = UpdateCards(dbPool, cards)
+	if err != nil {
+		return err
 	}
 	return nil
 }

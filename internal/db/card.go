@@ -62,6 +62,29 @@ func InsertCards(dbPool *pgxpool.Pool, cards []parser.Card) error {
 	return tx.Commit(ctx)
 }
 
+func UpdateCards(dbPool *pgxpool.Pool, cards []parser.Card) error {
+	ctx := context.Background()
+	tx, err := dbPool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("could not start transaction: %v", err)
+	}
+	defer tx.Rollback(ctx)
+
+	for _, card := range cards {
+		id, err := updateCard(tx, card)
+		if err != nil {
+			return err
+		}
+
+		card.ID = id
+		err = updateAchievements(tx, card)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
+}
 func insertCard(tx pgx.Tx, card parser.Card) error {
 	_, err := tx.Exec(context.Background(), `
         INSERT INTO cards (id, idx, level, info, task_title_one, task_title_two, task_content_one, task_content_two, dungeon_one, dungeon_two, dungeon_three, spell)
@@ -85,12 +108,63 @@ func insertCard(tx pgx.Tx, card parser.Card) error {
 	return nil
 }
 
+func updateCard(tx pgx.Tx, card parser.Card) (uuid.UUID, error) {
+	row := tx.QueryRow(context.Background(), `
+		WITH ins AS (
+	        INSERT INTO cards (id, idx, level, info, task_title_one, task_title_two, task_content_one, task_content_two, dungeon_one, dungeon_two, dungeon_three, spell)
+	        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	        ON CONFLICT (idx) DO NOTHING
+	        RETURNING id
+		), existing AS (
+			SELECT id FROM cards WHERE idx = $2
+		)
+		SELECT id FROM ins UNION SELECT id FROM existing;`,
+		card.ID,
+		card.Idx,
+		card.Level,
+		card.Info,
+		card.TaskTitleOne,
+		card.TaskTitleTwo,
+		card.TaskContentOne,
+		card.TaskContentTwo,
+		strings.Join(card.DungeonOne, "\n"),
+		strings.Join(card.DungeonTwo, "\n"),
+		strings.Join(card.DungeonThree, "\n"),
+		card.Spell,
+	)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	if err != nil {
+		return id, fmt.Errorf("failed to insert card: %v", err)
+	}
+	return id, nil
+}
+
 func insertAchievements(tx pgx.Tx, card parser.Card) error {
 	for _, achievement := range card.Achievements {
 		achievementID := uuid.New()
 		_, err := tx.Exec(context.Background(), `
             INSERT INTO achievements (id, name, link, card_id)
             VALUES ($1, $2, $3, $4)`,
+			achievementID,
+			achievement.Value,
+			achievement.Link,
+			card.ID,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to insert achievement: %v", err)
+		}
+	}
+	return nil
+}
+
+func updateAchievements(tx pgx.Tx, card parser.Card) error {
+	for _, achievement := range card.Achievements {
+		achievementID := uuid.New()
+		_, err := tx.Exec(context.Background(), `
+            INSERT INTO achievements (id, name, link, card_id)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (name, card_id) DO NOTHING`,
 			achievementID,
 			achievement.Value,
 			achievement.Link,
@@ -143,7 +217,7 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]*Card, error) {
 		ON achievements.id = achievements_users.achievement_id
 		AND @user_id = achievements_users.user_id
     WHERE cards.idx >= @lo AND cards.idx < @hi
-    ORDER BY cards.idx;`
+    ORDER BY cards.idx, achievements.name;`
 
 	args := pgx.NamedArgs{
 		"user_id": user.ID,
@@ -231,11 +305,20 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]*Card, error) {
 			if achievementDone != nil {
 				done = *achievementDone
 			}
-			existingCard.Achievements = append(existingCard.Achievements, Achievement{
-				Name: *achievementName,
-				Link: link,
-				Done: done,
-			})
+			contains := false
+			for _, ach := range existingCard.Achievements {
+				if ach.Name == *achievementName {
+					contains = true
+					break
+				}
+			}
+			if !contains {
+				existingCard.Achievements = append(existingCard.Achievements, Achievement{
+					Name: *achievementName,
+					Link: link,
+					Done: done,
+				})
+			}
 		}
 	}
 
