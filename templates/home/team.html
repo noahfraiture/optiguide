@@ -2,11 +2,11 @@
 <div class="flex justify-between items-center mb-4">
   <div>
     <button hx-post="/team/minus" hx-trigger="click" hx-swap="none"
-      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+      class="px-4 py-2 bg-green-600 dark:bg-green-800 text-white rounded hover:bg-green-700 dark:hover:bg-green-900 transition">
       -
     </button>
     <button hx-post="/team/plus" hx-trigger="click" hx-swap="beforeend" hx-target="#pickers"
-      class="px-4 py-2 bg-green-600 text-white rounded ml-2 hover:bg-green-700 transition">
+      class="px-4 py-2 bg-green-600 dark:bg-green-800 text-white rounded ml-2 hover:bg-green-700 dark:hover:bg-green-900 transition">
       +
     </button>
   </div>
@@ -27,7 +27,7 @@
 
 <div class="relative inline-block text-left dropdown" id="character-box-{{ .BoxIndex }}">
   <button type="button"
-    class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+    class="dropbtn inline-flex justify-center w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-green-600 dark:bg-green-800 font-medium text-white hover:bg-green-700 dark:hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
     <!-- Icon of the character picked and its name -->
     <div id="icon-{{ .BoxIndex }}">
       {{ block "character-icon" .Character.Class }}{{ end }}
@@ -45,7 +45,7 @@
     </svg>
   </button>
   <div
-    class="dropdown-content origin-top-right absolute right-0 mt-0 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden"
+    class="dropdown-content origin-top-right absolute right-0 mt-0 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black dark:ring-gray-700 ring-opacity-5 hidden"
     style="top: 100%; left: 0; z-index: 10; transform: translateY(-1px);">
     <div class="py-1">
       <!-- Every possibility of the dropdown menu -->
@@ -53,7 +53,7 @@
       {{ $name := .Character.Name }}
       {{ range $i := iterate nbClass }}
       <a hx-trigger="click" hx-swap="none" hx-post="/team/pick?class={{ $i }}&index={{ $index }}"
-        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 items-center cursor-pointer">
+        class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 items-center cursor-pointer">
         {{ block "character-icon" $i }}{{ end }} {{ className $i }}
       </a>
       {{ end }}
@@ -65,7 +65,6 @@
       var dropdown = this.closest('.dropdown');
       var dropdownContent = dropdown.querySelector('.dropdown-content');
       var dropbtn = dropdown.querySelector('.dropbtn');
-
       dropdown.addEventListener('mouseenter', function () {
         if (dropdownContent && dropbtn) {
           dropdownContent.classList.remove('hidden');
@@ -73,14 +72,12 @@
           adjustDropdownPosition(dropdownContent, dropdown);
         }
       });
-
       dropdown.addEventListener('mouseleave', function () {
         if (dropdownContent && dropbtn) {
           dropdownContent.classList.add('hidden');
           dropbtn.classList.remove('bg-green-700');
         }
       });
-
       function adjustDropdownPosition(dropdownContent, dropdown) {
         var rect = dropdown.getBoundingClientRect();
         var windowWidth = window.innerWidth;
@@ -122,10 +119,9 @@
 {{ define "editable-name" }}
 <input type="text" placeholder="{{ .Name }}" name="name" hx-post="/team/save-name?index={{ .Index }}"
   hx-swap="outerHTML"
-  class="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-green-600 placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hover:bg-green-700 transition"
+  class="w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-green-600 dark:bg-green-800 placeholder-gray-200 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hover:bg-green-700 dark:hover:bg-green-900 transition"
   autofocus />
 {{ end }}
-
 {{ define "delete-character" }}
 <div hx-swap-oob="delete" id="character-box-{{ . }}"></div>
 {{ end }}

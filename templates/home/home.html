@@ -1,5 +1,5 @@
 {{ define "body" }}
-<div class="min-h-screen bg-gray-100 p-6">
+<div class="min-h-screen p-6">
   {{ if .TopbarData.LoggedIn }}
 
   {{ block "team" . }}{{ end }}
@@ -9,7 +9,7 @@
     {{ block "cards" .CardData }}{{ end }}
   </div>
   {{ else }}
-  <h1 class="text-2xl text-center text-gray-700">You are not connected</h1>
+  <h1 class="text-2xl text-center text-gray-700 dark:text-gray-300">You are not connected</h1>
   {{ end }}
 </div>
 {{ end }}
@@ -18,7 +18,8 @@
 {{ range $cardIndex := iterate .MaxCardID }}
 <div hx-swap-oob="beforeend:#character-boxes-{{ $cardIndex }}" id="character-box-{{ $.BoxIndex }}">
   {{ $boxState := boxAtCard $.Boxes $cardIndex }}
-  {{ block "box" (map "CardIndex" $cardIndex "BoxIndex" $.BoxIndex "Done" (doneAtIndex $boxState $.BoxIndex) "Character" (characterAtIndex $.Team $.BoxIndex) ) }}{{ end }}
+  {{ block "box" (map "CardIndex" $cardIndex "BoxIndex" $.BoxIndex "Done" (doneAtIndex $boxState $.BoxIndex) "Character"
+  (characterAtIndex $.Team $.BoxIndex) ) }}{{ end }}
 </div>
 {{ end }}
 

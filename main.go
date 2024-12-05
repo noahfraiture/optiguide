@@ -54,7 +54,6 @@ func main() {
 	http.HandleFunc("/user/edit-name", user.EditName)
 	http.HandleFunc("/user/save-name", user.SaveName)
 
-	// FIXME : needed to have tailwindcss
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	fmt.Println("Start server...")

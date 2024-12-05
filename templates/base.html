@@ -6,12 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ block "title" . }}{{ end }}</title>
   <script src="https://unpkg.com/htmx.org"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="/static/css/output.css" rel="stylesheet"/>
   <link rel="icon" href="/static/favicon.png" type="image/png">
-
 </head>
 
-<body>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
   {{ block "topbar" . }}{{ end }}
 
   <div id="body">
