@@ -1,5 +1,16 @@
 # syntax=docker/dockerfile:1
 
+# Base image for building CSS files
+FROM node:14 AS css-build-stage
+
+WORKDIR /app
+
+RUN npm install -g tailwindcss
+
+COPY . .
+
+RUN tailwindcss -i ./static/css/input.css -o ./static/css/output.css
+
 # Build the application from source
 FROM golang:1.23.2 AS build-stage
 
@@ -23,9 +34,11 @@ WORKDIR /
 
 COPY --from=build-stage /optiguide /optiguide
 COPY --from=build-stage /app/guide.xlsx /guide.xlsx
-COPY --from=build-stage /app/static /static
 COPY --from=build-stage /app/templates /templates
-COPY --from=build-stage /app/migrations/ /migrations/
+COPY --from=build-stage /app/migrations/ /migrations
+COPY --from=build-stage /app/static/favicon.png /static/favicon.png
+COPY --from=build-stage /app/static/images /static/images
+COPY --from=css-build-stage /app/static/css/output.css /static/css/output.css
 
 EXPOSE 8080
 
