@@ -6,27 +6,32 @@
   chaque utilisateur puisse survenir. Cela ne devrait pas se produire, mais tant que le guide n'est pas finalisé, je ne
   peux pas garantir comment la transition se passera.
 </div>
-
 <div class="bg-green-600 dark:bg-green-700 text-white p-4 shadow-md">
-  <div class="container mx-auto flex justify-between items-center">
-
+  <div class="container mx-auto flex flex-wrap items-center justify-between">
     <!-- Left Section: Title and Links -->
-    <div class="flex items-center space-x-4">
-      <h1 class="text-2xl font-bold">Optiguide</h1>
-      <a href="/"
-        class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition">
-        Accueil </a>
-      <a href="/guild"
-        class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition">
-        Guildes </a>
-      <a href="/about"
-        class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition">
-        Contact </a>
+    <div class="flex-1 flex items-center justify-between md:justify-start">
+      <h1 class="text-xl font-bold mr-4">Optiguide</h1>
+      <nav class="hidden md:flex space-x-4">
+        <a href="/"
+          class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition">Accueil</a>
+        <a href="/guild"
+          class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition">Guildes</a>
+        <a href="/about"
+          class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition">Contact</a>
+      </nav>
     </div>
-
-    <!-- Center Section: Tooltip -->
-    <div class="absolute left-1/2 transform -translate-x-1/2">
-      <div class="relative group inline-block">
+    <!-- Right Section: Name and Login Button -->
+    <div class="flex items-center space-x-4 mt-2 md:mt-0">
+      <div class="hidden md:flex items-center space-x-2">
+        {{ if .LoggedIn }}
+        {{ block "name" . }}{{ end }}
+        {{ end }}
+      </div>
+      <div>
+        {{ renderAuthButton .LoggedIn }}
+      </div>
+      <!-- Center Section: Tooltip -->
+      <div class="relative group inline-block ml-2">
         <svg class="w-6 h-6 text-white hover:text-gray-300 transition-colors duration-200 cursor-pointer"
           fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path fill-rule="evenodd"
@@ -34,25 +39,12 @@
             clip-rule="evenodd"></path>
         </svg>
         <span
-          class="absolute left-full bottom-0 mb-2 ml-2 w-max hidden group-hover:block bg-black text-white text-sm rounded p-2 shadow-lg">
-          Update : nouveau dark mode qui se synchronise avec le navigateur! </span>
-      </div>
-    </div>
-
-    <!-- Right Section: Name and Login Button -->
-    <div class="ml-auto flex items-center">
-      <div id="name" class="flex items-center space-x-2">
-        {{ if .LoggedIn }}
-        {{ block "name" . }}{{ end }}
-        {{ end }}
-      </div>
-      <div class="ml-4">
-        {{ renderAuthButton .LoggedIn }}
+          class="absolute left-full bottom-0 mb-2 ml-2 w-max hidden group-hover:block bg-black text-white text-sm rounded p-2 shadow-lg">Update:
+          nouveau dark mode qui se synchronise avec le navigateur!</span>
       </div>
     </div>
   </div>
 </div>
-
 {{ end }}
 
 {{ define "name" }}
