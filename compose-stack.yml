@@ -12,11 +12,11 @@ services:
       - GOOGLE_SECRET_FILE=/run/secrets/google-secret
       - SESSION_SECRET_FILE=/run/secrets/session-secret
       - POSTGRES_USER=optiguide
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - POSTGRES_PASSWORD_FILE=/run/secrets/optiguide-postgres-password
       - POSTGRES_DB=optiguide
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=optiguide_postgres
     secrets:
-      - db-password
+      - optiguide-postgres-password
       - google-id
       - google-secret
       - session-secret
@@ -24,18 +24,18 @@ services:
       update_config:
         order: start-first
     depends_on:
-      - postgres
+      - optiguide_postgres
     networks:
       - traefik
 
-  postgres:
+  optiguide_postgres:
     image: postgres:17-alpine3.20
     environment:
       - POSTGRES_USER=optiguide
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - POSTGRES_PASSWORD_FILE=/run/secrets/optiguide-postgres-password
       - POSTGRES_DB=optiguide
     secrets:
-      - db-password
+      - optiguide-postgres-password
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U optiguide"]
       interval: 10s
@@ -48,11 +48,12 @@ services:
 
 volumes:
   postgres_data:
+
 networks:
   traefik:
     external: true
 secrets:
-  db-password:
+  optiguide-postgres-password:
     external: true
   google-id:
     external: true
