@@ -136,7 +136,7 @@
 
 <!-- Name section -->
 {{ define "name" }}
-<div id="name" hx-target="#name" hx-post="/user/edit-name" hx-swap="outerHTML" hx-trigger="blur, change"
+<div id="name" hx-target="#name" hx-post="/user/edit-name" hx-swap="outerHTML" hx-trigger="click"
   class="space-x-2 cursor-pointer">
   <span class="text-lg font-semibold">{{ .Username }}</span>
   <button hx-get="/user/edit-name"
@@ -147,7 +147,7 @@
 {{ define "edit-name" }}
 <div id="name" class="flex items-center space-x-2">
   <input type="text" name="name" hx-post="/user/save-name" hx-swap="outerHTML" hx-target="#name"
-    placeholder="{{ .Username }}"
+    hx-trigger="blur, change" placeholder="{{ .Username }}"
     class="px-3 py-2 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-600"
     autofocus />
   <button hx-post="/user/save-name" hx-target="#name"
