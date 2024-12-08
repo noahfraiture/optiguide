@@ -213,6 +213,7 @@ func GetCards(dbPool *pgxpool.Pool, user User) ([]*Card, error) {
     LEFT JOIN progress
 		ON cards.id = progress.card_id
 		AND progress.user_id = @user_id
+		AND progress.box_index < users.team_size
     LEFT JOIN achievements
 		ON cards.id = achievements.card_id
     LEFT JOIN achievements_users
