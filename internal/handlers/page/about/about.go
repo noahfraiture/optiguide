@@ -22,11 +22,6 @@ var funcsAbout = template.FuncMap{
 }
 
 func About(w http.ResponseWriter, r *http.Request) {
-	funcs := funcsAbout
-	for k, v := range topbar.FuncsTopbar {
-		funcs[k] = v
-	}
-
 	dbPool, err := db.GetPool()
 	if err != nil {
 		fmt.Println(err)
@@ -47,7 +42,7 @@ func About(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl, err := template.New("base.html").
-		Funcs(funcs).
+		Funcs(funcsAbout).
 		ParseFiles(
 			"templates/base.html",
 			"templates/topbar.html",

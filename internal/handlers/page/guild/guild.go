@@ -22,11 +22,6 @@ var funcsGuild template.FuncMap = template.FuncMap{
 }
 
 func Guild(w http.ResponseWriter, r *http.Request) {
-	funcs := funcsGuild
-	for k, v := range topbar.FuncsTopbar {
-		funcs[k] = v
-	}
-
 	dbPool, err := db.GetPool()
 	if err != nil {
 		fmt.Println(err)
@@ -57,7 +52,7 @@ func Guild(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.
 		New("base.html").
-		Funcs(funcs).
+		Funcs(funcsGuild).
 		ParseFiles(
 			"templates/base.html",
 			"templates/topbar.html",
