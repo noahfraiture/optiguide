@@ -86,22 +86,23 @@ func UpdateCards(dbPool *pgxpool.Pool, cards []parser.Card) error {
 	return tx.Commit(ctx)
 }
 func insertCard(tx pgx.Tx, card parser.Card) error {
-	_, err := tx.Exec(context.Background(), `
-        INSERT INTO cards (id, idx, level, info, task_title_one, task_title_two, task_content_one, task_content_two, dungeon_one, dungeon_two, dungeon_three, spell)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-		card.ID,
-		card.Idx,
-		card.Level,
-		card.Info,
-		card.TaskTitleOne,
-		card.TaskTitleTwo,
-		card.TaskContentOne,
-		card.TaskContentTwo,
-		strings.Join(card.DungeonOne, "\n"),
-		strings.Join(card.DungeonTwo, "\n"),
-		strings.Join(card.DungeonThree, "\n"),
-		card.Spell,
-	)
+	query := `INSERT INTO cards (id, idx, level, info, task_title_one, task_title_two, task_content_one, task_content_two, dungeon_one, dungeon_two, dungeon_three, spell)
+        VALUES (@id, @idx, @level, @info, @task_title_one, @task_title_two, @task_content_one, @task_content_two, @dungeon_one, @dungeon_two, @dungeon_three, @spell)`
+	args := pgx.NamedArgs{
+		"id":               card.ID,
+		"idx":              card.Idx,
+		"level":            card.Level,
+		"info":             card.Info,
+		"task_title_one":   card.TaskTitleOne,
+		"task_title_two":   card.TaskTitleTwo,
+		"task_content_one": card.TaskContentOne,
+		"task_content_two": card.TaskContentTwo,
+		"dungeon_one":      strings.Join(card.DungeonOne, "\n"),
+		"dungeon_two":      strings.Join(card.DungeonTwo, "\n"),
+		"dungeon_three":    strings.Join(card.DungeonThree, "\n"),
+		"spell":            card.Spell,
+	}
+	_, err := tx.Exec(context.Background(), query, args)
 	if err != nil {
 		return fmt.Errorf("failed to insert card: %v", err)
 	}
@@ -109,29 +110,31 @@ func insertCard(tx pgx.Tx, card parser.Card) error {
 }
 
 func updateCard(tx pgx.Tx, card parser.Card) (uuid.UUID, error) {
-	row := tx.QueryRow(context.Background(), `
+	query := `
 		WITH ins AS (
 	        INSERT INTO cards (id, idx, level, info, task_title_one, task_title_two, task_content_one, task_content_two, dungeon_one, dungeon_two, dungeon_three, spell)
-	        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	        VALUES (@id, @idx, @level, @info, @task_title_one, @task_title_two, @task_content_one, @task_content_two, @dungeon_one, @dungeon_two, @dungeon_three, @spell)
 	        ON CONFLICT (idx) DO NOTHING
 	        RETURNING id
 		), existing AS (
 			SELECT id FROM cards WHERE idx = $2
 		)
-		SELECT id FROM ins UNION SELECT id FROM existing;`,
-		card.ID,
-		card.Idx,
-		card.Level,
-		card.Info,
-		card.TaskTitleOne,
-		card.TaskTitleTwo,
-		card.TaskContentOne,
-		card.TaskContentTwo,
-		strings.Join(card.DungeonOne, "\n"),
-		strings.Join(card.DungeonTwo, "\n"),
-		strings.Join(card.DungeonThree, "\n"),
-		card.Spell,
-	)
+		SELECT id FROM ins UNION SELECT id FROM existing;`
+	args := pgx.NamedArgs{
+		"id":               card.ID,
+		"idx":              card.Idx,
+		"level":            card.Level,
+		"info":             card.Info,
+		"task_title_one":   card.TaskTitleOne,
+		"task_title_two":   card.TaskTitleTwo,
+		"task_content_one": card.TaskContentOne,
+		"task_content_two": card.TaskContentTwo,
+		"dungeon_one":      strings.Join(card.DungeonOne, "\n"),
+		"dungeon_two":      strings.Join(card.DungeonTwo, "\n"),
+		"dungeon_three":    strings.Join(card.DungeonThree, "\n"),
+		"spell":            card.Spell,
+	}
+	row := tx.QueryRow(context.Background(), query, args)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	if err != nil {
@@ -177,8 +180,7 @@ func updateAchievements(tx pgx.Tx, card parser.Card) error {
 	return nil
 }
 
-func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]*Card, error) {
-	const PAGESIZE = 10
+func GetCards(dbPool *pgxpool.Pool, user User) ([]*Card, error) {
 	ctx := context.Background()
 
 	tx, err := dbPool.Begin(ctx)
@@ -216,13 +218,10 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]*Card, error) {
     LEFT JOIN achievements_users
 		ON achievements.id = achievements_users.achievement_id
 		AND @user_id = achievements_users.user_id
-    WHERE cards.idx >= @lo AND cards.idx < @hi
     ORDER BY cards.idx, achievements.name;`
 
 	args := pgx.NamedArgs{
 		"user_id": user.ID,
-		"lo":      page * PAGESIZE,
-		"hi":      (page + 1) * PAGESIZE,
 	}
 
 	rows, err := tx.Query(ctx, query, args)
@@ -230,9 +229,11 @@ func GetCards(dbPool *pgxpool.Pool, user User, page int) ([]*Card, error) {
 		return nil, err
 	}
 
-	// A map to associate each card's index to its instance, for managing boxes state
+	// A map to associate each card's index to its instance to manage boxes state
 	cardsMap := make(map[int]*Card)
-	cards := make([]*Card, 0, PAGESIZE)
+	// Since we don't know if we query a page or all, we use 0
+	// TODO : may add the number of all cards if known
+	cards := make([]*Card, 0)
 
 	// Process rows
 	for rows.Next() {

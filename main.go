@@ -31,7 +31,6 @@ func main() {
 	http.HandleFunc("/team/plus", home.Plus)
 	http.HandleFunc("/team/editable-name", home.RenderEditableName)
 	http.HandleFunc("/team/save-name", home.SaveName)
-	http.HandleFunc("/card", home.RenderCard)
 	http.HandleFunc("/card/toggle", user.Toggle)
 	http.HandleFunc("/card/toggle-achievement", user.ToggleAchievement)
 

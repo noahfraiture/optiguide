@@ -6,7 +6,7 @@
 
   <div id="card-container" class="flex flex-col gap-6">
     <!-- Call the first page of cards -->
-    {{ block "cards" .CardData }}{{ end }}
+    {{ block "cards" . }}{{ end }}
   </div>
   {{ else }}
   <h1 class="text-2xl text-center text-gray-700 dark:text-gray-300">You are not connected</h1>

@@ -13,14 +13,14 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
       <div class="md:col-span-1 lg:col-span-1">
         <div
-          class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800 cursor-pointer">
+          class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
           <h3 class="font-medium text-green-700 dark:text-green-300">{{ .TaskTitleOne }}</h3>
           <p class="text-gray-700 dark:text-gray-200">{{ .TaskContentOne }}</p>
         </div>
       </div>
       <div class="md:col-span-1 lg:col-span-1">
         <div
-          class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800 cursor-pointer">
+          class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
           {{ if .TaskTitleTwo }}
           <h3 class="font-medium text-green-700 dark:text-green-300">{{ .TaskTitleTwo }}</h3>
           {{ else }}
@@ -38,7 +38,7 @@
     {{ else }}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-4">
       <div
-        class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800 cursor-pointer">
+        class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
         <h3 class="font-medium text-green-700 dark:text-green-300">{{ .TaskTitleOne }}</h3>
         <p class="text-gray-700 dark:text-gray-200">{{ .TaskContentOne }}</p>
       </div>
@@ -111,9 +111,8 @@
         {{ $cardIndex := .Idx }}
         {{ $boxes := .Boxes }}
 
-        {{ range $boxIndex := iterate $.Size }}
-        {{ block "box" (map "CardIndex" $cardIndex "BoxIndex" $boxIndex "Done" (index $boxes $boxIndex) "Character"
-        (characterAtIndex $.Team $boxIndex)) }}{{ end }}
+        {{ range $.Team }}
+        {{ block "box" (map "CardIndex" $cardIndex "Done" (index $boxes .BoxIndex) "Character" . ) }}{{ end }}
         {{ end }}
       </div>
     </div>
@@ -130,23 +129,20 @@
 
 </div>
 {{ end }}
-
-<div hx-get="/card?page={{ add .Page 1 }}" hx-trigger="revealed" hx-swap="outerHTML"
-  class="text-center mt-4 text-gray-500 dark:text-gray-400">Loading...</div>
 {{ end }}
 
 {{ define "box" }}
 
-<div id="character-box-{{ .BoxIndex }}"
-  class="flex items-center space-x-2 cursor-pointer bg-gray-100 dark:bg-gray-700 p-2 rounded-lg shadow-md hover:bg-gray-200 dark:hover:bg-gray-600 transition duration-200 flex-wrap">
+<div id="character-box-{{ .Character.BoxIndex }}"
+  class="flex items-center space-x--gray-100 dark:bg-gray-700 p-2 rounded-lg shadow-md hover:bg-gray-200 dark:hover:bg-gray-600 transition duration-200 flex-wrap">
   <label class="flex items-center space-x-2 w-full">
-    <input type="checkbox" hx-get="/card/toggle?card={{ .CardIndex }}&box={{ .BoxIndex }}" hx-swap="none"
+    <input type="checkbox" hx-get="/card/toggle?card={{ .CardIndex }}&box={{ .Character.BoxIndex }}" hx-swap="none"
       class="w-4 h-4 text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-2"
       {{ if .Done }} checked {{ end }} />
-    <div id="icon-{{ .BoxIndex }}" class="flex-shrink-0">
+    <div id="icon-{{ .Character.BoxIndex }}" class="flex-shrink-0">
       {{ block "character-icon" .Character.Class }}{{ end }}
     </div>
-    <div id="name-{{ .BoxIndex }}" class="truncate whitespace-nowrap">
+    <div id="name-{{ .Character.BoxIndex }}" class="truncate whitespace-nowrap">
       {{ .Character.Name }}
     </div>
   </label>

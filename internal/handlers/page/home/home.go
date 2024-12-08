@@ -15,7 +15,7 @@ type HomeData struct {
 	Team     []db.Character
 	TeamSize int
 	topbar.TopbarData
-	CardData CardData // Data for the first card to be display
+	Cards []*db.Card
 }
 
 var funcsHome = template.FuncMap{
@@ -74,8 +74,9 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	userAuth, err := auth.GetUser(r)
 	loggedIn := err == nil
-	team := []db.Character{}
+	var team []db.Character
 	var user db.User
+	var cards []*db.Card
 	if loggedIn {
 		// Get user
 		user, err = db.GetUserFromProvider(dbPool, userAuth)
@@ -92,6 +93,13 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Can't get boxes", http.StatusInternalServerError)
+			return
+		}
+
+		cards, err = db.GetCards(dbPool, user)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Can't get cards", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -113,8 +121,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 	err = tmpl.ExecuteTemplate(w, "base.html",
 		HomeData{
-			// We use empty cards and page=-1 to display nothing but the loader of the first page
-			CardData:   CardData{Page: -1},
+			Cards:      cards,
 			Team:       team,
 			TeamSize:   user.TeamSize,
 			TopbarData: topbar.TopbarData{LoggedIn: loggedIn, Username: user.Username},
