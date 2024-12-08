@@ -118,7 +118,7 @@
 
 {{ define "editable-name" }}
 <input type="text" placeholder="{{ .Name }}" name="name" hx-post="/team/save-name?index={{ .Index }}"
-  hx-swap="outerHTML"
+  hx-swap="outerHTML" hx-trigger="blur, change"
   class="w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-green-600 dark:bg-green-800 placeholder-gray-200 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hover:bg-green-700 dark:hover:bg-green-900 transition"
   autofocus />
 {{ end }}
