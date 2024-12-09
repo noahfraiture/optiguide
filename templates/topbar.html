@@ -14,7 +14,7 @@
       </div>
 
       <!-- Navigation Links -->
-      <ul class="flex space-x-4">
+      <ul class="hidden sm:flex space-x-4">
         <li><a href="/"
             class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition">Accueil</a>
         </li>
@@ -28,18 +28,18 @@
 
       <!-- User name -->
       {{ if .LoggedIn }}
-      <div class="hidden lg:flex justify-between items-center py-4">
+      <div class="hidden lg:flex">
         {{ block "name" . }}{{ end }}
       </div>
       {{ end }}
 
       <!-- Login button (Large) -->
       {{ if .LoggedIn }}
-      <div class="hidden lg:flex justify-between items-center py-4">
+      <div class="hidden lg:flex">
         {{ block "logout-button" . }}{{ end }}
       </div>
       {{ else }}
-      <div class="hidden lg:flex justify-between items-center py-4">
+      <div class="hidden lg:flex">
         {{ block "login-button" . }}{{ end }}
       </div>
       {{ end }}
@@ -72,13 +72,13 @@
       <!-- Navigation Links -->
       <ul class="flex flex-col items-center space-y-4 mt-4">
         <li><a href="/"
-            class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition w-full">Accueil</a>
+            class="px-4 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition w-full">Accueil</a>
         </li>
         <li><a href="/guild"
-            class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition w-full">Guildes</a>
+            class="px-4 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition w-full">Guildes</a>
         </li>
         <li><a href="/about"
-            class="px-4 py-2 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition w-full">Contact</a>
+            class="px-4 bg-green-700 dark:bg-green-800 rounded-lg hover:bg-green-800 dark:hover:bg-green-900 transition w-full">Contact</a>
         </li>
       </ul>
 
@@ -123,14 +123,14 @@
 <!-- Login buttons -->
 {{ define "login-button" }}
 <a href="/auth/google"
-  class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Se
+  class="px-4 py-2 bg-blue-700 dark:bg-blue-600 rounded-lg hover:bg-blue-800 dark:hover:bg-blue-700 transition w-full">Se
   connecter
   avec Google</a>
 {{ end }}
 
 {{ define "logout-button" }}
 <a href="/logout"
-  class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Se
+  class="px-4 py-2 bg-blue-700 dark:bg-blue-600 rounded-lg hover:bg-blue-800 dark:hover:bg-blue-700 transition w-full">Se
   déconnecter</a>
 {{ end }}
 
@@ -140,7 +140,7 @@
   class="space-x-2 cursor-pointer">
   <span class="text-lg font-semibold">{{ .Username }}</span>
   <button hx-get="/user/edit-name"
-    class="px-2 py-1 bg-green-700 dark:bg-green-800 hover:bg-green-800 dark:hover:bg-green-900 text-sm rounded transition">Edit</button>
+    class="px-2 bg-green-700 dark:bg-green-800 hover:bg-green-800 dark:hover:bg-green-900 text-sm rounded transition">Edit</button>
 </div>
 {{ end }}
 
@@ -148,9 +148,9 @@
 <div id="name" class="flex items-center space-x-2">
   <input type="text" name="name" hx-post="/user/save-name" hx-swap="outerHTML" hx-target="#name"
     hx-trigger="blur, change" placeholder="{{ .Username }}"
-    class="px-3 py-2 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-600"
+    class="px-3 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-600"
     autofocus />
   <button hx-post="/user/save-name" hx-target="#name"
-    class="px-2 py-1 bg-green-700 dark:bg-green-800 hover:bg-green-800 dark:hover:bg-green-900 text-sm rounded transition">Save</button>
+    class="px-2 bg-green-700 dark:bg-green-800 hover:bg-green-800 dark:hover:bg-green-900 text-sm rounded transition">Save</button>
 </div>
 {{ end }}
