@@ -180,7 +180,7 @@ func updateAchievements(tx pgx.Tx, card parser.Card) error {
 	return nil
 }
 
-func GetCards(dbPool *pgxpool.Pool, user User) ([]*Card, error) {
+func GetCards(dbPool *pgxpool.Pool, user User, substring string) ([]*Card, error) {
 	ctx := context.Background()
 
 	tx, err := dbPool.Begin(ctx)
@@ -219,10 +219,21 @@ func GetCards(dbPool *pgxpool.Pool, user User) ([]*Card, error) {
     LEFT JOIN achievements_users
 		ON achievements.id = achievements_users.achievement_id
 		AND @user_id = achievements_users.user_id
+	WHERE cards.task_title_one ILIKE @search
+		OR cards.task_title_two ILIKE @search
+		OR cards.task_content_one ILIKE @search
+		OR cards.task_content_two ILIKE @search
+		OR cards.info ILIKE @search
+		OR cards.dungeon_one ILIKE @search
+		OR cards.dungeon_two ILIKE @search
+		OR cards.dungeon_three ILIKE @search
+		OR cards.spell ILIKE @search
+		OR achievements.name ILIKE @search
     ORDER BY cards.idx, achievements.name;`
 
 	args := pgx.NamedArgs{
 		"user_id": user.ID,
+		"search":  fmt.Sprintf("%%%s%%", substring),
 	}
 
 	rows, err := tx.Query(ctx, query, args)

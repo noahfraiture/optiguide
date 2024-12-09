@@ -2,6 +2,8 @@
 <div class="min-h-screen p-6">
   {{ if .TopbarData.LoggedIn }}
 
+  {{ block "search-bar" . }}{{ end }}
+
   {{ block "team" . }}{{ end }}
 
   <div id="card-container" class="flex flex-col gap-6">
@@ -24,5 +26,18 @@
 {{ end }}
 
 {{ block "picker" (map "BoxIndex" .BoxIndex "Character" (characterAtIndex $.Team .BoxIndex)) }}{{ end }}
+
+{{ end }}
+
+{{ define "search-bar" }}
+
+<div class="flex pb-4 space-x-4">
+  <input type="text" name="name" hx-get="/card/search" hx-trigger="keyup changed delay:500ms"
+    hx-target="#card-container" hx-swap="innerHTML" placeholder="Recherche une étape..."
+    class="flex-grow px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-green-500 focus:border-green-500 dark:focus:border-green-400 bg-white dark:bg-gray-700">
+  <button
+    class="hidden sm:block text-white px-4 py-2 bg-green-600 dark:bg-green-800 rounded-lg hover:bg-green-700 dark:hover:bg-green-900 transition">Recherche</button>
+</div>
+
 
 {{ end }}
