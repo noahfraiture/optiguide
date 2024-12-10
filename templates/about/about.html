@@ -1,5 +1,6 @@
 {{ define "body" }}
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-6">
+  {{ if .TopbarData.LoggedIn }}
   <section class="w-full max-w-3xl">
     <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 mb-8">
       <h2 class="text-3xl font-bold mb-6 text-green-700 dark:text-green-300">A propos de ce projet</h2>
@@ -19,6 +20,11 @@
       {{ block "feedback-form" . }}{{ end }}
     </div>
   </section>
+  {{ else }}
+  <div class="flex justify-center items-center h-full">
+    <h1 class="text-3xl text-green-700 dark:text-green-300 font-bold">You are not connected</h1>
+  </div>
+  {{ end }}
 </div>
 {{ end }}
 
