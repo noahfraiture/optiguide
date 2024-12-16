@@ -43,8 +43,9 @@ var funcsHome = template.FuncMap{
 			}
 		}
 		return db.Character{
-			Class: db.NONE,
-			Name:  fmt.Sprintf("Perso %d", boxIndex+1),
+			Class:    db.NONE,
+			Name:     fmt.Sprintf("Perso %d", boxIndex+1),
+			BoxIndex: boxIndex,
 		}
 	},
 	"boxAtCard": func(boxes map[int]db.BoxesState, cardID int) db.BoxesState {

@@ -12,15 +12,13 @@
     {{ if .TaskContentTwo }}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
       <div class="md:col-span-1 lg:col-span-1">
-        <div
-          class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
+        <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
           <h3 class="font-medium text-green-700 dark:text-green-300">{{ .TaskTitleOne }}</h3>
           <p class="text-gray-700 dark:text-gray-200">{{ .TaskContentOne }}</p>
         </div>
       </div>
       <div class="md:col-span-1 lg:col-span-1">
-        <div
-          class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
+        <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
           {{ if .TaskTitleTwo }}
           <h3 class="font-medium text-green-700 dark:text-green-300">{{ .TaskTitleTwo }}</h3>
           {{ else }}
@@ -37,8 +35,7 @@
     </div>
     {{ else }}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-4">
-      <div
-        class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
+      <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg hover:bg-green-100 dark:hover:bg-green-800">
         <h3 class="font-medium text-green-700 dark:text-green-300">{{ .TaskTitleOne }}</h3>
         <p class="text-gray-700 dark:text-gray-200">{{ .TaskContentOne }}</p>
       </div>
@@ -111,8 +108,10 @@
         {{ $cardIndex := .Idx }}
         {{ $boxes := .Boxes }}
 
-        {{ range $.Team }}
-        {{ block "box" (map "CardIndex" $cardIndex "Done" (index $boxes .BoxIndex) "Character" . ) }}{{ end }}
+        <!-- Instead of iterating on the team, we use 'characterAtIndex' that provide default behavior -->
+        {{ range $boxIndex := iterate $.TeamSize }}
+        {{ block "box" (map "CardIndex" $cardIndex "Done" (index $boxes $boxIndex) "Character" (characterAtIndex $.Team
+        $boxIndex ) ) }}{{ end }}
         {{ end }}
       </div>
     </div>
