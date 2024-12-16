@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"optiguide/internal/auth"
 	"optiguide/internal/db"
 	"optiguide/internal/handlers/page/about"
 	"optiguide/internal/handlers/page/guild"
@@ -15,11 +14,7 @@ import (
 
 func main() {
 
-	err := auth.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = db.Init()
+	err := db.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
