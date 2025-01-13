@@ -3,6 +3,12 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Development stage with air for hot reload
+FROM base AS dev
+RUN go install github.com/air-verse/air@latest
+COPY . .
+CMD ["air", "-c", ".air.toml"]
+
 FROM node:23-alpine AS css-build-stage
 WORKDIR /app
 RUN npm install -g tailwindcss
@@ -17,7 +23,8 @@ COPY main.go go.mod go.sum ./
 COPY internal ./internal
 RUN CGO_ENABLED=0 GOOS=linux go build -o /optiguide
 
-FROM alpine:3.21
+# Final stage
+FROM alpine:3.21 AS prod
 COPY templates /templates
 COPY migrations/ /migrations
 COPY static/favicon.png /static/favicon.png
@@ -31,3 +38,6 @@ EXPOSE 8080
 # USER nonroot:nonroot
 
 ENTRYPOINT ["/optiguide"]
+
+# Choose the target based on the environment
+FROM ${TARGET:-prod} AS final

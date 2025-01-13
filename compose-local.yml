@@ -44,7 +44,11 @@ services:
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   optiguide:
-    build: .
+    build: 
+      context: .
+      target: dev
+      args:
+        - TARGET=dev
     environment:
       - GOOGLE_ID=${GOOGLE_ID}
       - GOOGLE_SECRET=${GOOGLE_SECRET}
@@ -56,6 +60,9 @@ services:
       - POSTGRES_HOST=postgres
     ports:
       - "8080:8080"
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
     labels:
       - "traefik.http.routers.optiguide.rule=Host(`optiguide.docker.localhost`)"
     depends_on:
@@ -68,6 +75,8 @@ services:
       - POSTGRES_USER=optiguide
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=optiguide
+    ports:
+      - "5432:5432"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U optiguide"]
@@ -81,3 +90,4 @@ volumes:
   postgres_data:
   prometheus_data:
   grafana_data:
+  go-modules:
