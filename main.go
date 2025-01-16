@@ -7,6 +7,7 @@ import (
 
 	"optiguide/internal/db"
 	"optiguide/internal/handlers/page/about"
+	"optiguide/internal/handlers/page/characters"
 	"optiguide/internal/handlers/page/guild"
 	"optiguide/internal/handlers/page/home"
 	"optiguide/internal/handlers/user"
@@ -29,6 +30,9 @@ func main() {
 	http.HandleFunc("/card/search", home.SearchCards)
 	http.HandleFunc("/card/toggle", user.Toggle)
 	http.HandleFunc("/card/toggle-achievement", user.ToggleAchievement)
+
+	// Characters
+	http.HandleFunc("/characters", characters.Characters)
 
 	// About
 	http.HandleFunc("/about", about.About)

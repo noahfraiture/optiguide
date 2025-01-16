@@ -106,7 +106,7 @@
 {{ end }}
 
 {{ define "character-name" }}
-<div hx-post="/team/editable-name?name={{ .Name }}&index={{ .Index }}" hx-swap="outerHTML">{{ displayName .Name }}</div>
+<div hx-post="/team/editable-name?name={{ .Name }}&index={{ .Index }}" hx-swap="outerHTML">{{ displayCharacterName .Name .Index }}</div>
 {{ end }}
 
 {{ define "swap-name" }}

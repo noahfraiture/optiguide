@@ -160,7 +160,7 @@ var ClassToName = map[Class]string{
 }
 
 type Character struct {
-	userID   string
+	UserID   string
 	BoxIndex int
 	Class    Class
 	Name     string
@@ -214,7 +214,7 @@ func GetTeam(dbPoll *pgxpool.Pool, user User) ([]Character, error) {
 	boxes := make([]Character, 0)
 	for rows.Next() {
 		box := Character{}
-		err := rows.Scan(&box.userID, &box.BoxIndex, &box.Class, &box.Name)
+		err := rows.Scan(&box.UserID, &box.BoxIndex, &box.Class, &box.Name)
 		if err != nil {
 			return nil, err
 		}
