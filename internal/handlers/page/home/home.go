@@ -18,47 +18,6 @@ type HomeData struct {
 	Cards []*db.Card
 }
 
-var funcsHome = template.FuncMap{
-	"add": func(i, j int) int {
-		return i + j
-	},
-	"iterate": func(max int) []int {
-		r := make([]int, max)
-		for i := range max {
-			r[i] = i
-		}
-		return r
-	},
-	// Functions instead of `index . .` in html template, help to provide default value
-	"doneAtIndex": func(boxes db.BoxesState, boxIndex int) bool {
-		if box, ok := boxes[boxIndex]; ok {
-			return box
-		}
-		return false
-	},
-	"characterAtIndex": func(boxes []db.Character, boxIndex int) db.Character {
-		for _, box := range boxes {
-			if box.BoxIndex == boxIndex {
-				return box
-			}
-		}
-		return db.Character{
-			Class:    db.NONE,
-			Name:     fmt.Sprintf("Perso %d", boxIndex+1),
-			BoxIndex: boxIndex,
-		}
-	},
-	"boxAtCard": func(boxes map[int]db.BoxesState, cardID int) db.BoxesState {
-		if box, ok := boxes[cardID]; ok {
-			return box
-		}
-		return db.BoxesState{}
-	},
-	"map":       handlers.RenderMap,
-	"className": className,
-	"nbClass":   func() int { return int(db.NB_CLASS) },
-}
-
 func Home(w http.ResponseWriter, r *http.Request) {
 
 	dbPool, err := db.GetPool()
@@ -102,7 +61,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.
 		New("base.html").
-		Funcs(funcsHome).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles(
 			"templates/base.html",
 			"templates/topbar.html",
@@ -173,7 +132,7 @@ func SearchCards(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.
 		New("card.html").
-		Funcs(funcsHome).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles(
 			"templates/home/card.html",
 			"templates/home/team.html", // needed for character icon

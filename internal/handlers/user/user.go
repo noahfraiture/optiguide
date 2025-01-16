@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"optiguide/internal/auth"
 	"optiguide/internal/db"
+	"optiguide/internal/handlers"
 	"strconv"
 )
 
 func EditName(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.
 		New("edit-name").
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles("templates/topbar.html")
 	if err != nil {
 		fmt.Println(err)
@@ -54,6 +56,7 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 	user.Username = name
 	tmpl, err := template.
 		New("name").
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles("templates/topbar.html")
 	if err != nil {
 		fmt.Println(err)
