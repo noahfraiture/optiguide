@@ -16,15 +16,6 @@ type CharactersData struct {
 	topbar.TopbarData
 }
 
-var funcsCharacters = template.FuncMap{
-	"emptyArr": func() []any { return []any{} },
-	"map":      handlers.RenderMap,
-	"className": func(class db.Class) string {
-		return db.ClassToName[class]
-	},
-	"add": func(a int, b int) int { return a + b },
-}
-
 func Characters(w http.ResponseWriter, r *http.Request) {
 	dbPool, err := db.GetPool()
 	if err != nil {
@@ -58,7 +49,7 @@ func Characters(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.
 		New("base.html").
-		Funcs(funcsCharacters).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles(
 			"templates/base.html",
 			"templates/topbar.html",
@@ -79,4 +70,4 @@ func Characters(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error executing template", http.StatusInternalServerError)
 		return
 	}
-} 
+}

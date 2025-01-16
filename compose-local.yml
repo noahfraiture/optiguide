@@ -5,8 +5,6 @@ services:
       - "--api.insecure=true"
       - "--providers.docker"
       - "--log.level=DEBUG"
-      - "--metrics.prometheus=true"
-      - "--metrics.prometheus.buckets=0.100000, 0.300000, 1.200000, 5.000000"
     labels:
       - "traefik.http.routers.traefik.rule=Host(`traefik.docker.localhost`)"
       - "traefik.http.routers.traefik.service=api@internal"
@@ -17,31 +15,6 @@ services:
       - "8081:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
-  prometheus:
-    image: prom/prometheus
-    volumes:
-      - ./prometheus/:/etc/prometheus
-      - prometheus_data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
-      - "--web.console.templates=/usr/share/prometheus/consoles"
-
-  grafana:
-    image: grafana/grafana
-    depends_on:
-      - prometheus
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
-    env_file:
-      - ./grafana/config.monitoring
-    labels:
-      - "traefik.http.routers.grafana.rule=Host(`grafana.docker.localhost`)"
-      - "traefik.http.routers.grafana.service=grafana"
-      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   optiguide:
     build: 
@@ -88,6 +61,4 @@ services:
 
 volumes:
   postgres_data:
-  prometheus_data:
-  grafana_data:
   go-modules:

@@ -16,11 +16,6 @@ type aboutData struct {
 	topbar.TopbarData
 }
 
-var funcsAbout = template.FuncMap{
-	"emptyArr": func() []any { return []any{} },
-	"map":      handlers.RenderMap,
-}
-
 func About(w http.ResponseWriter, r *http.Request) {
 	dbPool, err := db.GetPool()
 	if err != nil {
@@ -41,8 +36,9 @@ func About(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl, err := template.New("base.html").
-		Funcs(funcsAbout).
+	tmpl, err := template.
+		New("base.html").
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles(
 			"templates/base.html",
 			"templates/topbar.html",
@@ -72,7 +68,10 @@ func SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 
 	feedback := r.FormValue("feedback")
 	if strings.TrimSpace(feedback) == "" {
-		tmpl, err := template.New("feedback-fail").ParseFiles("templates/about/about.html")
+		tmpl, err := template.
+			New("feedback-fail").
+			Funcs(handlers.HtmlFuncs).
+			ParseFiles("templates/about/about.html")
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Unable to load template", http.StatusInternalServerError)
@@ -112,7 +111,10 @@ func SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.New("feedback-success").ParseFiles("templates/about/about.html")
+	tmpl, err := template.
+		New("feedback-success").
+		Funcs(handlers.HtmlFuncs).
+		ParseFiles("templates/about/about.html")
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)

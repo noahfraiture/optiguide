@@ -14,11 +14,7 @@
           <div class="flex-grow">
             <div class="flex items-center justify-between">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {{- if eq .Name "" -}}
-                  Personnage {{ add .BoxIndex 1 }}
-                {{- else -}}
-                  {{ .Name }}
-                {{- end -}}
+                {{ displayCharacterName .Name .BoxIndex }}
               </h2>
             </div>
             <p class="text-gray-600 dark:text-gray-400">Classe: {{ className .Class }}</p>

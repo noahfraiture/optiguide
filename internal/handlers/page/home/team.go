@@ -40,7 +40,7 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl, err := template.
 		New("swap-name").
-		Funcs(funcsHome).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles("templates/home/team.html")
 	if err != nil {
 		fmt.Println(err)
@@ -59,17 +59,14 @@ func SaveName(w http.ResponseWriter, r *http.Request) {
 }
 
 func RenderEditableName(w http.ResponseWriter, r *http.Request) {
-	name, err := handlers.GetParameterString(w, r, "name")
-	if err != nil {
-		return
-	}
+	name := handlers.GetParameterString(w, r, "name")
 	index, err := handlers.GetParameterInt(w, r, "index")
 	if err != nil {
 		return
 	}
 	tmpl, err := template.
 		New("editable-name").
-		Funcs(funcsHome).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles("templates/home/team.html")
 	if err != nil {
 		fmt.Println(err)
@@ -85,19 +82,6 @@ func RenderEditableName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "template execution error", http.StatusInternalServerError)
 		return
 	}
-}
-
-func className(class any) template.HTML {
-	var i int
-	switch v := class.(type) {
-	case int:
-		i = v
-	case db.Class:
-		i = int(v)
-	default:
-		return ""
-	}
-	return template.HTML(db.ClassToName[db.Class(i)])
 }
 
 func PickCharacter(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +120,7 @@ func PickCharacter(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.
 		New("swap-icon").
-		Funcs(funcsHome).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles("templates/home/team.html")
 	if err != nil {
 		fmt.Println(err)
@@ -200,10 +184,15 @@ func Plus(w http.ResponseWriter, r *http.Request) {
 
 	user.TeamSize += 1
 	boxes, err := db.GetCardBoxes(dbPool, user)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "user plus", http.StatusInternalServerError)
+		return
+	}
 
 	tmpl, err := template.
 		New("swap").
-		Funcs(funcsHome).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles(
 			"templates/home/home.html",
 			"templates/home/team.html",
@@ -258,7 +247,7 @@ func Minus(w http.ResponseWriter, r *http.Request) {
 	user.TeamSize -= 1
 	tmpl, err := template.
 		New("delete-character").
-		Funcs(funcsHome).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles("templates/home/team.html")
 	if err != nil {
 		fmt.Println(err)

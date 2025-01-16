@@ -16,11 +16,6 @@ type GuildData struct {
 	Guilds []db.Guild
 }
 
-var funcsGuild template.FuncMap = template.FuncMap{
-	"emptyArr": func() []any { return []any{} },
-	"map":      handlers.RenderMap,
-}
-
 func Guild(w http.ResponseWriter, r *http.Request) {
 	dbPool, err := db.GetPool()
 	if err != nil {
@@ -52,7 +47,7 @@ func Guild(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.
 		New("base.html").
-		Funcs(funcsGuild).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles(
 			"templates/base.html",
 			"templates/topbar.html",
@@ -102,7 +97,10 @@ func GuildSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.New("guild.html").Funcs(funcsGuild).ParseFiles("templates/guild/guild.html")
+	tmpl, err := template.
+		New("guild.html").
+		Funcs(handlers.HtmlFuncs).
+		ParseFiles("templates/guild/guild.html")
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
@@ -169,7 +167,7 @@ func GuildCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl, err := template.
 		New("guild").
-		Funcs(funcsGuild).
+		Funcs(handlers.HtmlFuncs).
 		ParseFiles(
 			"templates/guild/guild.html",
 		)
