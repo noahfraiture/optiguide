@@ -50,7 +50,6 @@
     <div class="py-1">
       <!-- Every possibility of the dropdown menu -->
       {{ $index := .BoxIndex }}
-      {{ $name := .Character.Name }}
       {{ range $i := iterate nbClass }}
       <a hx-trigger="click" hx-swap="none" hx-post="/team/pick?class={{ $i }}&index={{ $index }}"
         class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 items-center cursor-pointer">
@@ -107,7 +106,7 @@
 {{ end }}
 
 {{ define "character-name" }}
-<div hx-post="/team/editable-name?name={{ .Name }}&index={{ .Index }}" hx-swap="outerHTML">{{ .Name }}</div>
+<div hx-post="/team/editable-name?name={{ .Name }}&index={{ .Index }}" hx-swap="outerHTML">{{ displayName .Name }}</div>
 {{ end }}
 
 {{ define "swap-name" }}

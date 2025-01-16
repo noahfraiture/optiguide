@@ -142,7 +142,7 @@
       {{ block "character-icon" .Character.Class }}{{ end }}
     </div>
     <div id="name-{{ .Character.BoxIndex }}" class="truncate whitespace-nowrap">
-      {{ .Character.Name }}
+      {{ displayName .Character.Name }}
     </div>
   </label>
 </div>

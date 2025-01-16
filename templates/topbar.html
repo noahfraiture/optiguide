@@ -138,7 +138,7 @@
 {{ define "name" }}
 <div id="name" hx-target="#name" hx-post="/user/edit-name" hx-swap="outerHTML" hx-trigger="click"
   class="space-x-2 cursor-pointer">
-  <span class="text-lg font-semibold">{{ .Username }}</span>
+  <span class="text-lg font-semibold">{{ displayName .Username }}</span>
   <button hx-get="/user/edit-name"
     class="px-2 bg-green-700 dark:bg-green-800 hover:bg-green-800 dark:hover:bg-green-900 text-sm rounded transition">Edit</button>
 </div>

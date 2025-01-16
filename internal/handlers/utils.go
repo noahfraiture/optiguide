@@ -53,6 +53,14 @@ var HtmlFuncs = template.FuncMap{
 	"className": className,
 	"nbClass":   func() int { return int(db.NB_CLASS) },
 
+	// team.html,topbar.html. Used to have a default name to avoid having unclickable name
+	"displayName": func(name string) string {
+		if name == "" {
+			return "Inconnu"
+		}
+		return name
+	},
+
 	// guild.html. Used to render the research result when there's no research yet
 	"emptyArr": func() []any { return []any{} },
 }
