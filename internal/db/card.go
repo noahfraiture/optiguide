@@ -358,16 +358,15 @@ func GetCardBoxes(dbPool *pgxpool.Pool, user User) (map[int]BoxesState, error) {
 
 	query := `
         SELECT
-            progress.card_id,
+            cards.idx,
             progress.box_index,
             progress.done
         FROM progress
+        JOIN cards ON cards.id = progress.card_id
         WHERE progress.user_id = @user_id
-        ORDER BY progress.card_id, progress.box_index;
+        ORDER BY cards.idx, progress.box_index;
     `
-	args := pgx.NamedArgs{
-		"user_id": user.ID,
-	}
+	args := pgx.NamedArgs{"user_id": user.ID}
 
 	rows, err := dbPool.Query(ctx, query, args)
 	if err != nil {
@@ -379,27 +378,22 @@ func GetCardBoxes(dbPool *pgxpool.Pool, user User) (map[int]BoxesState, error) {
 
 	for rows.Next() {
 		var (
-			cardId   int
+			cardIdx  int
 			boxIndex int
 			done     bool
 		)
 
-		if err := rows.Scan(&cardId, &boxIndex, &done); err != nil {
+		if err := rows.Scan(&cardIdx, &boxIndex, &done); err != nil {
 			return nil, fmt.Errorf("error scanning row: %w", err)
 		}
 
 		// If this card doesn't exist in the map yet, initialize its boxes slice
-		if _, ok := cardBoxes[cardId]; !ok {
-			cardBoxes[cardId] = make(BoxesState, user.TeamSize)
+		if _, ok := cardBoxes[cardIdx]; !ok {
+			cardBoxes[cardIdx] = make(BoxesState, user.TeamSize)
 		}
 
 		// Assign the box state
-		if boxIndex < len(cardBoxes[cardId]) {
-			cardBoxes[cardId][boxIndex] = done
-		} else {
-			// Handle the case where box_index might exceed the expected team size
-			return nil, fmt.Errorf("box_index %d exceeds team size %d for card ID %d", boxIndex, user.TeamSize, cardId)
-		}
+		cardBoxes[cardIdx][boxIndex] = done
 	}
 
 	if err := rows.Err(); err != nil {
