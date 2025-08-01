@@ -53,10 +53,18 @@ var HtmlFuncs = template.FuncMap{
 	"className": className,
 	"nbClass":   func() int { return int(db.NB_CLASS) },
 
-	// team.html,topbar.html. Used to have a default name to avoid having unclickable name
+	// topbar.html. Used to have a default name to avoid having unclickable name
 	"displayName": func(name string) string {
 		if name == "" {
 			return "Inconnu"
+		}
+		return name
+	},
+
+	// card.html,team.html,character.html. Used to have a default name to avoid having unclickable name
+	"displayCharacterName": func(name string, index int) string {
+		if name == "" {
+			return fmt.Sprintf("Perso %d", index+1)
 		}
 		return name
 	},
