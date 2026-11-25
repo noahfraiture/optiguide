@@ -5,7 +5,7 @@ RUN go mod download
 
 FROM node:23-alpine AS css-build-stage
 WORKDIR /app
-RUN npm install -g tailwindcss
+RUN npm install -g tailwindcss@3.4.14
 COPY tailwind.config.js .
 COPY templates ./templates
 COPY static ./static
